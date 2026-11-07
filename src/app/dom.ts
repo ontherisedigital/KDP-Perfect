@@ -35,13 +35,18 @@ export function segment<T extends string>(
   get: () => T,
   set: (v: T) => void,
 ): Segment {
-  host.innerHTML = items.map((i) => `<button type="button" data-v="${esc(i.value)}">${esc(i.label)}</button>`).join('');
+  host.innerHTML = '<span class="seg-ink" aria-hidden="true"></span>' + items.map((i) => `<button type="button" data-v="${esc(i.value)}">${esc(i.label)}</button>`).join('');
+  const sync = () => {
+    host.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === get())));
+    moveInk(host, host.querySelector<HTMLElement>('button[aria-pressed="true"]'));
+  };
+  new ResizeObserver(() => moveInk(host, host.querySelector<HTMLElement>('button[aria-pressed="true"]'), false)).observe(host);
   host.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest('button');
     if (b && !b.disabled) set(b.dataset.v as T);
   });
   return {
-    sync: () => host.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === get()))),
+    sync,
     disable: (value, disabled, title = '') => {
       const b = host.querySelector<HTMLButtonElement>(`[data-v="${CSS.escape(value)}"]`);
       if (b) {
@@ -92,4 +97,38 @@ export function rafThrottle(fn: () => void): () => void {
       fn();
     });
   };
+}
+
+export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Slide a control's `.seg-ink` under the chosen button, with the kit's quick stretch. */
+export function moveInk(host: HTMLElement, on: HTMLElement | null, stretch = true): void {
+  const ink = host.querySelector<HTMLElement>('.seg-ink');
+  if (!ink) return;
+  if (!on || !on.offsetWidth) {
+    ink.style.width = '0';
+    return;
+  }
+  const prev = ink.style.left;
+  ink.style.left = `${on.offsetLeft}px`;
+  ink.style.width = `${on.offsetWidth}px`;
+  if (stretch && prev && prev !== ink.style.left && !reducedMotion()) {
+    ink.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(1.18) scaleY(.9)' }, { transform: 'scaleX(1)' }], { duration: 420, easing: 'ease-out' });
+  }
+}
+
+/** Pointer-following sheen on glass panels (skipped on touch devices). */
+export function initSheen(): void {
+  if (matchMedia('(hover: none)').matches) return;
+  let last: HTMLElement | null = null;
+  document.addEventListener('pointermove', (e) => {
+    const g = (e.target as HTMLElement).closest?.<HTMLElement>('.glass') ?? null;
+    if (last && last !== g) last.classList.remove('lit');
+    if (!g) { last = null; return; }
+    const r = g.getBoundingClientRect();
+    g.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    g.style.setProperty('--my', `${e.clientY - r.top}px`);
+    g.classList.add('lit');
+    last = g;
+  }, { passive: true });
 }

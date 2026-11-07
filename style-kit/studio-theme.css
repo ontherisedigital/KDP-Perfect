@@ -1,0 +1,204 @@
+/* =========================================================
+   On the Rise Digital: the "liquid glass" app theme
+   Drop this file into any app. It is self-contained: tokens, fonts, the ambient
+   background, glass panels, buttons, chips, the sliding segmented control, inputs,
+   dialogs, toasts and the playful animations. See STYLE-GUIDE.md for how to use it.
+   Fonts live in assets/fonts (copy the three .woff2 files and fix the paths below).
+   ========================================================= */
+
+/* ---------- fonts (SIL Open Font License; keep the OFL texts with the files) ---------- */
+@font-face { font-family: 'Fredoka'; font-style: normal; font-display: swap; font-weight: 300 700; src: url('assets/fonts/fredoka-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Dosis';   font-style: normal; font-display: swap; font-weight: 200 800; src: url('assets/fonts/dosis-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Arima';   font-style: normal; font-display: swap; font-weight: 700;     src: url('assets/fonts/arima-bold-latin.woff2') format('woff2'); }
+
+/* ---------- tokens ---------- */
+:root {
+  --ink: #17213D;
+  --ink-soft: #56658C;
+  --bg: #EEF4FF;
+  --glass: rgba(255, 255, 255, 0.46);
+  --glass-strong: rgba(255, 255, 255, 0.74);
+  --glass-inset: rgba(255, 255, 255, 0.38);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-hi: rgba(255, 255, 255, 0.9);
+  --glass-lo: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 10px 40px -12px rgba(36, 52, 110, 0.28);
+  --line: rgba(23, 33, 61, 0.1);
+  /* four ambient colors for the background blobs; an app may retint these from its content */
+  --a1: #33ADE8; --a2: #8EDCF7; --a3: #B79CFF; --a4: #FF8FB1;
+  --accent: #1A7FD8; --accent-2: #6A5CFF; --accent-ink: #FFFFFF;
+  --radius: 26px;
+  --spring: cubic-bezier(.3, 1.45, .45, 1);
+  --display: 'Fredoka', 'Comic Sans MS', 'Chalkboard SE', cursive;   /* headings */
+  --body: 'Dosis', system-ui, -apple-system, 'Segoe UI', sans-serif;  /* subtitles, subheadings, body */
+  --title: 'Arima', 'Fredoka', 'Comic Sans MS', cursive;              /* titles, section headers (Bold only) */
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #EEF3FF;
+    --ink-soft: #A5B3D6;
+    --bg: #0A0F21;
+    --glass: rgba(30, 38, 70, 0.48);
+    --glass-strong: rgba(36, 46, 84, 0.84);
+    --glass-inset: rgba(255, 255, 255, 0.07);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --glass-hi: rgba(255, 255, 255, 0.22);
+    --glass-lo: rgba(255, 255, 255, 0.04);
+    --glass-shadow: 0 14px 44px -14px rgba(0, 0, 0, 0.7);
+    --line: rgba(255, 255, 255, 0.1);
+    color-scheme: dark;
+  }
+}
+
+/* ---------- base ---------- */
+* { box-sizing: border-box; }
+/* Dosis is slim and looks small, so everything scales up a little and body text is medium weight. */
+html { -webkit-text-size-adjust: 100%; font-size: 106.25%; }
+body {
+  margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+  font-family: var(--body); font-weight: 500; color: var(--ink); background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+svg { fill: currentColor; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+.display { font-family: var(--display); font-weight: 800; letter-spacing: .01em; }   /* headings */
+.muted { color: var(--ink-soft); }
+.link-btn { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 800; font-size: inherit; text-decoration: underline dotted; text-underline-offset: 3px; }
+@media (prefers-color-scheme: dark) { .link-btn { color: color-mix(in srgb, var(--accent) 55%, white); } }
+
+/* Titles and section headers use Arima Bold. Add the class to anything else that is a title. */
+.title-font, .modal-head h2, .section-h {
+  font-family: var(--title); font-weight: 700;
+}
+.section-h { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-soft); }
+
+/* ---------- ambient liquid background: <div class="ambient"><i class="blob b1"></i>…b4</div> ---------- */
+.ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.ambient::after { /* soft grain so the gradients don't band */
+  content: ''; position: absolute; inset: 0; opacity: .06; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.blob { position: absolute; width: 55vmax; height: 55vmax; border-radius: 50%; filter: blur(70px); opacity: .55; transition: background-color 1.4s ease; animation: drift 26s ease-in-out infinite alternate; }
+@media (prefers-color-scheme: dark) { .blob { opacity: .38; } }
+.b1 { background-color: var(--a1); top: -20vmax; left: -15vmax; }
+.b2 { background-color: var(--a2); top: -10vmax; right: -20vmax; animation-duration: 31s; animation-delay: -6s; }
+.b3 { background-color: var(--a3); bottom: -25vmax; left: 10vmax; animation-duration: 34s; animation-delay: -12s; }
+.b4 { background-color: var(--a4); bottom: -20vmax; right: -10vmax; animation-duration: 29s; animation-delay: -3s; }
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(6vmax, 4vmax) scale(1.08); }
+  100% { transform: translate(-4vmax, 7vmax) scale(.95); }
+}
+
+/* ---------- glass panels (the main surface). Add initSheen() from STYLE-GUIDE.md for the pointer-following shine. ---------- */
+.glass {
+  position: relative; isolation: isolate;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-lo);
+}
+.glass::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(circle 240px at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, .38), transparent 65%); opacity: 0; transition: opacity .35s; }
+.glass.lit::before { opacity: 1; }
+.glass::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(170deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0) 30%); }
+@media (prefers-color-scheme: dark) {
+  .glass::before { background: radial-gradient(circle 240px at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, .12), transparent 65%); }
+  .glass::after { background: linear-gradient(170deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0) 30%); }
+}
+.card { border-radius: var(--radius); padding: 18px 20px 22px; animation: card-in .5s var(--spring) both; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px clamp(16px, 4vw, 40px); padding-top: max(10px, env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid var(--glass-border);
+}
+.brand-name { font-family: var(--display); font-size: 1.3rem; font-weight: 800; }
+.brand-name b { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ---------- segmented control with a sliding "ink" (call syncSegment() from STYLE-GUIDE.md) ---------- */
+.seg { position: relative; display: inline-flex; gap: 2px; padding: 5px; border-radius: 999px; }
+.seg > button { position: relative; z-index: 1; border: 0; background: none; border-radius: 999px; padding: 9px 16px; font-weight: 800; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; transition: color .25s; }
+.seg > button svg { width: 18px; height: 18px; }
+.seg > button.is-on { color: var(--ink); }
+.seg-ink { position: absolute; top: 5px; bottom: 5px; left: 5px; width: 0; border-radius: 999px; background: var(--glass-strong);
+  box-shadow: 0 4px 14px -4px rgba(30, 50, 110, .35), inset 0 1px 0 var(--glass-hi); transition: left .5s var(--spring), width .5s var(--spring); }
+.badge { min-width: 22px; padding: 1px 7px; border-radius: 999px; font-size: .74rem; text-align: center; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); }
+
+/* ---------- buttons ---------- */
+.btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 999px; padding: 10px 18px; font-weight: 800; white-space: nowrap; transition: transform .25s var(--spring), box-shadow .25s, background .25s; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn:active:not(:disabled) { transform: scale(.95); }
+.btn:disabled { opacity: .45; }
+.btn-primary { color: var(--accent-ink); background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 10px 24px -10px var(--accent), inset 0 1px 0 rgba(255, 255, 255, .45); }
+.btn-primary::after { content: ''; position: absolute; inset: 0 0 50% 0; border-radius: 999px 999px 40% 40%; background: linear-gradient(rgba(255, 255, 255, .38), rgba(255, 255, 255, 0)); pointer-events: none; }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 30px -10px var(--accent), inset 0 1px 0 rgba(255, 255, 255, .45); }
+.btn-glass { background: var(--glass-inset); border: 1px solid var(--glass-border); box-shadow: inset 0 1px 0 var(--glass-hi), 0 4px 12px -8px rgba(30, 50, 110, .4); }
+.btn-glass:hover { background: var(--glass-strong); }
+.btn-danger { background: linear-gradient(135deg, #FF6B6B, #E8365D); color: #fff; box-shadow: 0 10px 24px -10px #E8365D; }
+.btn-wide { width: 100%; }
+.btn-sm { padding: 8px 14px; font-size: .88rem; }
+.icon-btn { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass-inset); color: var(--ink); box-shadow: inset 0 1px 0 var(--glass-hi); transition: transform .25s var(--spring), background .2s, color .2s; }
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn:hover:not(:disabled) { background: var(--glass-strong); transform: translateY(-1px); }
+.icon-btn:active:not(:disabled) { transform: scale(.9); }
+.icon-btn:disabled { opacity: .35; }
+.icon-btn.sm { width: 32px; height: 32px; }
+.icon-btn.sm svg { width: 16px; height: 16px; }
+
+/* ---------- chips, fields, inputs ---------- */
+.fchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip { border: 1px solid var(--glass-border); background: var(--glass-inset); color: var(--ink-soft); border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: .8rem; transition: background .2s, color .2s, transform .25s var(--spring); }
+.fchip:hover { transform: translateY(-1px); }
+.fchip.is-on { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); border-color: transparent; box-shadow: 0 6px 16px -8px var(--accent); }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field-label { font-weight: 800; font-size: .86rem; color: var(--ink-soft); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.field-label output { color: var(--ink); }
+.text-input { width: 100%; border: 1px solid var(--glass-border); border-radius: 12px; padding: 7px 11px; font-weight: 800; background: var(--glass-inset); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .08); }
+.select-wrap { position: relative; display: block; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass-inset); }
+.select-wrap::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ink-soft); }
+.select-wrap select { width: 100%; appearance: none; border: 0; background: transparent; padding: 11px 36px 11px 14px; font-weight: 800; border-radius: 14px; }
+.select-wrap select option { color: #17213D; background: #fff; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 999px; background: var(--glass-inset); border: 1px solid var(--glass-border); outline-offset: 4px; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #EAF1FF); border: 0; box-shadow: 0 3px 10px rgba(20, 40, 100, .35), inset 0 0 0 3px var(--accent); transition: transform .2s var(--spring); }
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.18); }
+input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--accent); }
+
+/* ---------- dialogs (<dialog class="modal glass">) and toasts ---------- */
+.modal { position: fixed; inset: 0; margin: auto; border: 1px solid var(--glass-border); border-radius: 28px; padding: 18px 20px 22px; color: var(--ink); background: var(--glass-strong); max-width: min(94vw, 960px); max-height: 90vh; }
+.modal::backdrop { background: rgba(10, 18, 45, .35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.modal[open] { animation: pop-in .3s var(--spring); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+.modal-head h2 { margin: 0; font-size: 1.35rem; }
+.popover { position: fixed; z-index: 120; border-radius: 20px; padding: 12px; min-width: 200px; max-width: calc(100vw - 20px); background: var(--glass-strong); animation: pop-in .2s var(--spring); }
+.toast { position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); z-index: 400; display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100vw - 32px);
+  transform: translate(-50%, 40px) scale(.95); opacity: 0; pointer-events: none; background: rgba(20, 28, 54, .82); color: #fff; padding: 12px 18px; border-radius: 24px; font-weight: 700; line-height: 1.35;
+  border-color: rgba(255, 255, 255, .15); transition: transform .45s var(--spring), opacity .25s; }
+.toast.is-on { transform: translate(-50%, 0) scale(1); opacity: 1; pointer-events: auto; }
+
+/* ---------- the playful animations: things rise, deal, pop and bob with a springy ease ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }                                           /* panels and sections appearing */
+@keyframes card-in { from { opacity: 0; transform: translateY(18px) scale(.98); } }                           /* cards */
+@keyframes deal { from { opacity: 0; transform: translateY(16px) rotate(-4deg) scale(.92); } }                /* tiles dealt like cards: set style="--i:N" and animation-delay: calc(var(--i) * 30ms) */
+@keyframes pop-in { from { opacity: 0; transform: translateY(-6px) scale(.96); } }                            /* dialogs and menus */
+@keyframes bob { 50% { transform: translateY(-6px) rotate(6deg); } }                                          /* icons that wiggle on hover */
+.tile { animation: deal .55s var(--spring) both; animation-delay: calc(var(--i, 0) * 30ms); transition: transform .25s var(--spring); }
+.tile:hover { transform: translateY(-3px) scale(1.03); }
+.tile:hover .tile-icon { animation: bob .9s ease-in-out infinite; }
+.tile:active { transform: scale(.94); }
+
+/* Always respect the reduced-motion setting. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .blob { animation: none; }
+}

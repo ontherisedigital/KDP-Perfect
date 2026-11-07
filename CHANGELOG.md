@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- New look: the On the Rise Digital "liquid glass" style (frosted glass panels over a drifting color background, Fredoka / Dosis / Arima fonts bundled for offline use, blue-to-violet accents, sliding segmented controls and springy animations). Light and dark mode and reduced motion are supported.
+
 ## [0.2.1] - 2026-10-29
 
 ### Changed

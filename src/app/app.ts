@@ -1,7 +1,7 @@
 import type { CoverLayout } from '../core';
 import { initBookPanel, type BookResult } from './book';
 import type { Ctx, Screen } from './context';
-import { $ } from './dom';
+import { $, initSheen, moveInk } from './dom';
 import { initCoverScreen } from './screens/cover';
 import { initEbookScreen } from './screens/ebook';
 import { initMockupScreen } from './screens/mockup';
@@ -48,6 +48,9 @@ export function initApp(): void {
 
   for (const s of [initCoverScreen(ctx), initEbookScreen(ctx), initPreflightScreen(ctx), initMockupScreen(ctx)]) screens.set(s.id, s);
 
+  const tabBar = $('tabs');
+  tabBar.insertAdjacentHTML('afterbegin', '<span class="seg-ink" aria-hidden="true"></span>');
+  new ResizeObserver(() => moveInk(tabBar, tabBar.querySelector<HTMLElement>('[aria-current="page"]'), false)).observe(tabBar);
   const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tab]'));
   const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-screen]'));
   const bookPanel = document.querySelector<HTMLElement>('[data-panel="book"]')!;
@@ -63,6 +66,7 @@ export function initApp(): void {
       if (t.dataset.tab === id) t.setAttribute('aria-current', 'page');
       else t.removeAttribute('aria-current');
     }
+    moveInk(tabBar, tabs.find((t) => t.dataset.tab === id) ?? null);
     for (const s of sections) s.hidden = s.dataset.screen !== id;
     bookPanel.hidden = id === 'ebook';
     ebookPanel.hidden = id !== 'ebook';
@@ -76,6 +80,7 @@ export function initApp(): void {
 
   for (const t of tabs) t.addEventListener('click', () => show(t.dataset.tab as ScreenId));
 
+  initSheen();
   book = panel.result();
   show(active);
   $('main');

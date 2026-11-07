@@ -10,6 +10,7 @@
     <title>KDP Perfect</title>
   </head>
   <body>
+    <div class="ambient" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i></div>
     <a class="skip" href="#main">Skip to content</a>
 
     <header class="app-header">
@@ -19,7 +20,7 @@
           <rect x="14" y="5" width="4" height="22" fill="currentColor" opacity=".7" />
           <rect x="18" y="5" width="12" height="22" rx="1.5" fill="currentColor" />
         </svg>
-        <span class="brand-name">KDP Perfect</span>
+        <span class="brand-name">KDP <b>Perfect</b></span>
       </div>
       <nav class="tabs" aria-label="Tools" id="tabs">
         <button type="button" class="tab" data-tab="cover">Cover template</button>
@@ -34,7 +35,7 @@
 
     <main class="layout" id="main">
       <!-- ============ left column: inputs ============ -->
-      <aside class="panel inputs" aria-label="Book details">
+      <aside class="panel glass inputs" aria-label="Book details">
         <div data-panel="book">
           <h1>Your book</h1>
           <form id="book-form" novalidate autocomplete="off">
@@ -108,7 +109,7 @@
       <!-- ============ right column: screens ============ -->
       <div class="screens">
         <!-- ---------- Cover template ---------- -->
-        <section class="panel results" data-screen="cover" id="results" aria-labelledby="h-cover" tabindex="-1">
+        <section class="panel glass results" data-screen="cover" id="results" aria-labelledby="h-cover" tabindex="-1">
           <h1 id="h-cover" class="visually-hidden">Cover template and measurements</h1>
 
           <div class="canvas-card">
@@ -185,7 +186,7 @@
         </section>
 
         <!-- ---------- Kindle eBook ---------- -->
-        <section class="panel results" data-screen="ebook" aria-labelledby="h-ebook" hidden>
+        <section class="panel glass results" data-screen="ebook" aria-labelledby="h-ebook" hidden>
           <h1 id="h-ebook" class="visually-hidden">Kindle eBook cover template</h1>
           <div class="canvas-card">
             <div class="eyebrow">Create your eBook cover at</div>
@@ -228,7 +229,7 @@
         </section>
 
         <!-- ---------- Preflight ---------- -->
-        <section class="panel results" data-screen="preflight" aria-labelledby="h-preflight" hidden>
+        <section class="panel glass results" data-screen="preflight" aria-labelledby="h-preflight" hidden>
           <h1 id="h-preflight" class="visually-hidden">Preflight check</h1>
           <div class="canvas-card">
             <div class="eyebrow">Checking against</div>
@@ -267,7 +268,7 @@
         </section>
 
         <!-- ---------- 3D mockup ---------- -->
-        <section class="panel results" data-screen="mockup" aria-labelledby="h-mockup" hidden>
+        <section class="panel glass results" data-screen="mockup" aria-labelledby="h-mockup" hidden>
           <h1 id="h-mockup" class="visually-hidden">3D book mockup</h1>
 
           <div class="mock-grid">
