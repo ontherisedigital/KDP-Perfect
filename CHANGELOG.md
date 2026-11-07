@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-07
+
 ### Changed
 - New look: the On the Rise Digital "liquid glass" style (frosted glass panels over a drifting color background, Fredoka / Dosis / Arima fonts bundled for offline use, blue-to-violet accents, sliding segmented controls and springy animations). Light and dark mode and reduced motion are supported.
 
@@ -52,7 +54,8 @@ First release: the cover template generator.
 - Interior margin helpers (`src/core/interior.ts`) as groundwork for the planned interior formatter.
 - Test suite with golden values extracted from Amazon's KDP Print File Setup Calculator V5, plus an end-to-end desktop smoke test.
 
-[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ontherisedigital/KDP-Perfect/releases/tag/v0.1.0
