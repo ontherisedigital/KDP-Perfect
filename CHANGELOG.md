@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-08
+
 ### Added
 - **Interior tab: low-content interior builder.** Coloring and activity books from your page images (PNG, JPG or WebP; reorder, per-image DPI and crop check), and journals, notebooks and planners from generated pages (wide or college rule, dot grid, graph, handwriting practice, blank) with optional date line and page numbers.
 - **Front only / Front and back printing** for every book type. Front only puts each page on a right-hand page and leaves its back blank (best for coloring books, so markers don't bleed through).
@@ -65,7 +67,8 @@ First release: the cover template generator.
 - Interior margin helpers (`src/core/interior.ts`) as groundwork for the planned interior formatter.
 - Test suite with golden values extracted from Amazon's KDP Print File Setup Calculator V5, plus an end-to-end desktop smoke test.
 
-[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.1.0...v0.2.0
