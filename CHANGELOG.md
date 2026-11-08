@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-08
+
 ### Added
 - **Page designer** tab: build planner, journal and notebook pages from a modular element library. Calendar (day slot, week, month grid, mini month, year at a glance, date heading), planner (checklist, lists, hourly schedule, habit tracker, counter / water tracker, table), bullet journal (year in pixels, key, daily log, banner, mood scale), writing areas and notes boxes, text, shapes, lines, dividers, images and page numbers.
 - 19 shapes for every slot and frame (rectangle, rounded with a corner slider, pill, circle, hexagon, octagon, diamond, arch, ticket, tag, banner, shield, speech bubble, heart, star, flower, cloud, leaf, water drop), each unlined, lined, dotted or grid inside.
@@ -76,7 +78,8 @@ First release: the cover template generator.
 - Interior margin helpers (`src/core/interior.ts`) as groundwork for the planned interior formatter.
 - Test suite with golden values extracted from Amazon's KDP Print File Setup Calculator V5, plus an end-to-end desktop smoke test.
 
-[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.0...v0.2.1
