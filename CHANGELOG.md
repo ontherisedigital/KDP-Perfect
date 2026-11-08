@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- **Interior tab: low-content interior builder.** Coloring and activity books from your page images (PNG, JPG or WebP; reorder, per-image DPI and crop check), and journals, notebooks and planners from generated pages (wide or college rule, dot grid, graph, handwriting practice, blank) with optional date line and page numbers.
+- **Front only / Front and back printing** for every book type. Front only puts each page on a right-hand page and leaves its back blank (best for coloring books, so markers don't bleed through).
+- **Bleed or No bleed**, with a plain explanation: use bleed only when the art runs off the edge of the page. Bleed pages are trim + 0.125" wide and + 0.25" tall; art fills to the edge. Without bleed, art is fitted inside the margins.
+- Mirrored margins with KDP's page-count-based gutter, optional "This book belongs to", title and copyright pages, a page-by-page spread preview (black-and-white books are previewed in grayscale), and checks for KDP's page-count limits and blank-page runs.
+- Interior PDF at the exact page size with every font embedded, as KDP requires.
+- **Cover from your art.** The Interior tab shows the full-wrap cover size for the finished page count, plus the front, back and spine sizes in inches and pixels. Add a front image (and optionally a back image), pick spine and back colours and spine text, and download a print-ready full-wrap cover PDF. One click copies the page count to "Your book" so the cover template, preflight and mockup match.
+
+### Changed
+- The bundled fonts moved from `public/fonts` to `src/app/fonts` so they can also be embedded in PDFs.
+
 ## [0.3.0] - 2026-11-07
 
 ### Changed

@@ -5,7 +5,9 @@
 - **v0.1:** paperback cover template generator (PNG, JPG, PDF at actual size; desktop and web).
 - **Unreleased:** hardcover (case laminate) templates, Kindle eBook cover template, Preflight check, 3D book mockup (including 1:1 output).
 
-## Next: Word document → KDP interior (planned)
+## Later: Word document → KDP interior (on hold)
+
+> On hold: Kindle Create, Atticus and Vellum cover this well. Revisit only with clear quality-of-life gains.
 
 > **Goal:** the user uploads a `.docx`, picks a trim size, and gets a print-ready interior that meets KDP's requirements, with a customizable opening page for each chapter. The final page count feeds straight into the cover generator.
 
@@ -89,7 +91,8 @@ Ship four presets (Classic, Modern, Minimal, Ornamental) and let users tweak any
 
 ## Ideas backlog
 
-- **Image-folder interior for coloring books and planners** (one image per page, bleed and gutter margins, blank reverse pages, front matter). Best added with the Coloring Book Studio integration.
+- ~~Image-folder interior for coloring books and planners~~ Done: the Interior tab (low-content builder, `src/core/lowcontent.ts`).
+- **Interior preflight:** check any interior PDF for trim size, bleed, margins and gutter, low-resolution images, unembedded fonts, blank-page runs, and that the page count matches the cover.
 - Preflight: check embedded fonts, the resolution of images placed inside a PDF, color mode and transparency (needs a deeper PDF parser).
 - Mockup: open-book and hand-held poses, custom camera presets, batch export of every pose.
 - Batch templates for a series (same trim/paper, different page counts)

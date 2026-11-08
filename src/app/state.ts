@@ -4,10 +4,11 @@ import type { ReadingDirection } from '../core/cover';
 import type { ExportFormat } from '../core/summary';
 import type { SceneMode } from '../core/scene';
 import { ASPECTS, BACKGROUNDS, LONG_SIDES, POSES, type PoseId } from '../core/mockup';
+import { PAGE_STYLES, type LowContentKind, type PageStyle, type Sided } from '../core/lowcontent';
 
 export type SafeChoice = 'standard' | 'conservative';
 export type Dpi = 150 | 300;
-export type ScreenId = 'cover' | 'ebook' | 'preflight' | 'mockup';
+export type ScreenId = 'cover' | 'ebook' | 'preflight' | 'mockup' | 'interior';
 export type EbookPreset = 'ideal' | 'hd' | 'min' | 'custom';
 
 export interface EbookState {
@@ -30,6 +31,26 @@ export interface MockupState {
   format: 'png' | 'jpg';
 }
 
+export interface InteriorState {
+  kind: LowContentKind;
+  sided: Sided;
+  bleed: boolean;
+  style: PageStyle;
+  /** Journal: number of writing pages. */
+  count: number;
+  dateLine: boolean;
+  pageNumbers: boolean;
+  belongsTo: boolean;
+  title: string;
+  subtitle: string;
+  author: string;
+  copyright: string;
+  spineText: string;
+  spineColor: string;
+  spineTextColor: string;
+  backColor: string;
+}
+
 export interface AppState {
   screen: ScreenId;
   binding: Binding;
@@ -50,6 +71,7 @@ export interface AppState {
   format: ExportFormat;
   ebook: EbookState;
   mockup: MockupState;
+  interior: InteriorState;
 }
 
 export const DEFAULT_STATE: AppState = {
@@ -78,6 +100,24 @@ export const DEFAULT_STATE: AppState = {
     crease: false, // coloring-book and most glossy covers are flat; the crease is opt-in
     format: 'png',
   },
+  interior: {
+    kind: 'coloring',
+    sided: 'single',
+    bleed: false,
+    style: 'lined-wide',
+    count: 120,
+    dateLine: false,
+    pageNumbers: true,
+    belongsTo: false,
+    title: '',
+    subtitle: '',
+    author: '',
+    copyright: '',
+    spineText: '',
+    spineColor: '#ffffff',
+    spineTextColor: '#000000',
+    backColor: '#ffffff',
+  },
 };
 
 const KEY = 'kdp-perfect.v2';
@@ -100,7 +140,7 @@ export function loadState(): AppState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return s;
     const o = JSON.parse(raw) as Record<string, unknown>;
-    if (['cover', 'ebook', 'preflight', 'mockup'].includes(o.screen as string)) s.screen = o.screen as ScreenId;
+    if (['cover', 'ebook', 'preflight', 'mockup', 'interior'].includes(o.screen as string)) s.screen = o.screen as ScreenId;
     if (o.binding === 'paperback' || o.binding === 'hardcover') s.binding = o.binding;
     if (typeof o.trimId === 'string') s.trimId = o.trimId;
     if (isNum(o.customWidth) && o.customWidth > 0) s.customWidth = o.customWidth;
@@ -135,6 +175,18 @@ export function loadState(): AppState {
       if (typeof m.shadow === 'boolean') s.mockup.shadow = m.shadow;
       if (typeof m.crease === 'boolean') s.mockup.crease = m.crease;
       if (m.format === 'png' || m.format === 'jpg') s.mockup.format = m.format;
+    }
+    if (isRec(o.interior)) {
+      const i = o.interior;
+      const t = s.interior;
+      if (i.kind === 'coloring' || i.kind === 'journal') t.kind = i.kind;
+      if (i.sided === 'single' || i.sided === 'double') t.sided = i.sided;
+      if (typeof i.bleed === 'boolean') t.bleed = i.bleed;
+      if (PAGE_STYLES.some((p) => p.id === i.style)) t.style = i.style as PageStyle;
+      if (isNum(i.count) && i.count >= 0) t.count = Math.min(828, Math.round(i.count));
+      for (const k of ['dateLine', 'pageNumbers', 'belongsTo'] as const) if (typeof i[k] === 'boolean') t[k] = i[k] as boolean;
+      for (const k of ['title', 'subtitle', 'author', 'copyright', 'spineText'] as const) if (typeof i[k] === 'string') t[k] = (i[k] as string).slice(0, 2000);
+      for (const k of ['spineColor', 'spineTextColor', 'backColor'] as const) if (typeof i[k] === 'string' && /^#[0-9a-f]{6}$/i.test(i[k] as string)) t[k] = i[k] as string;
     }
   } catch {
     // Storage blocked or corrupt: fall back to defaults.

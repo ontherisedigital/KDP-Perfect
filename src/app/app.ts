@@ -4,11 +4,12 @@ import type { Ctx, Screen } from './context';
 import { $, initSheen, moveInk } from './dom';
 import { initCoverScreen } from './screens/cover';
 import { initEbookScreen } from './screens/ebook';
+import { initInteriorScreen } from './screens/interior';
 import { initMockupScreen } from './screens/mockup';
 import { initPreflightScreen } from './screens/preflight';
 import { loadState, saveState, type ScreenId } from './state';
 
-const SCREENS: ScreenId[] = ['cover', 'ebook', 'preflight', 'mockup'];
+const SCREENS: ScreenId[] = ['cover', 'interior', 'ebook', 'preflight', 'mockup'];
 
 export function initApp(): void {
   const state = loadState();
@@ -46,7 +47,12 @@ export function initApp(): void {
     },
   };
 
-  for (const s of [initCoverScreen(ctx), initEbookScreen(ctx), initPreflightScreen(ctx), initMockupScreen(ctx)]) screens.set(s.id, s);
+  const setPages = (n: number) => {
+    state.pages = n;
+    panel.write();
+    onBookChange();
+  };
+  for (const s of [initCoverScreen(ctx), initInteriorScreen({ ...ctx, setPages }), initEbookScreen(ctx), initPreflightScreen(ctx), initMockupScreen(ctx)]) screens.set(s.id, s);
 
   const tabBar = $('tabs');
   tabBar.insertAdjacentHTML('afterbegin', '<span class="seg-ink" aria-hidden="true"></span>');

@@ -106,7 +106,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit together
 
 ## Roadmap
 
-Next up: upload a Word document and get a KDP-ready interior (trim size, mirrored margins, chapter starts, page numbers, front matter) with a customizable chapter opening page. Details in [docs/ROADMAP.md](docs/ROADMAP.md).
+New: the **Interior** tab builds print-ready low-content interiors (coloring and activity books from your images; journals, notebooks and planners from generated pages) and assembles a full-wrap cover from your front and back art. Next up: an interior preflight for PDFs made elsewhere. Details in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Contributing
 

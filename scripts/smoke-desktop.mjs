@@ -150,6 +150,39 @@ try {
   }
   await click('#binding-toggle [data-v="paperback"]');
 
+  // ---- Low-content interior: journal PDF (embedded fonts under file://) and a cover from front art --------------------
+  await click('[data-tab="interior"]');
+  await sleep(300);
+  await click('#in-kind [data-v="journal"]');
+  await click('#in-sided [data-v="double"]');
+  await click('#in-bleed [data-v="no"]');
+  await evaluate("(() => { const c = document.getElementById('in-count'); c.value = '120'; c.dispatchEvent(new Event('input')); const t = document.getElementById('in-title'); t.value = 'Smoke Journal'; t.dispatchEvent(new Event('input')); })()");
+  await click('#in-download');
+  const inPdf = await waitFor(() => find(/^kdp-interior_.*\.pdf$/));
+  check(!!inPdf, 'interior PDF was written');
+  if (inPdf) {
+    const bytes = readFileSync(join(out, inPdf));
+    const d = await PDFDocument.load(bytes);
+    const sz = d.getPage(0).getSize();
+    check(d.getPageCount() === 122 && Math.abs(sz.width - 432) < 0.05 && Math.abs(sz.height - 648) < 0.05, `interior PDF: ${d.getPageCount()} pages at ${sz.width.toFixed(1)} x ${sz.height.toFixed(1)} pt (expect 122 at 432 x 648)`);
+    check(!/\/BaseFont\s*\/Helvetica/.test(bytes.toString('latin1')), 'interior PDF uses only embedded fonts');
+  }
+  await evaluate(`(async () => {
+    const c = document.createElement('canvas'); c.width = 1838; c.height = 2775;
+    const g = c.getContext('2d'); g.fillStyle = '#2255aa'; g.fillRect(0, 0, c.width, c.height);
+    const b = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.8));
+    const dt = new DataTransfer(); dt.items.add(new File([b], 'front.jpg', { type: 'image/jpeg' }));
+    const i = document.getElementById('in-front-file'); i.files = dt.files; i.dispatchEvent(new Event('change'));
+  })()`);
+  await sleep(800);
+  await click('#in-cover-download');
+  const inCover = await waitFor(() => find(/^kdp-paperback-cover_.*\.pdf$/));
+  check(!!inCover, 'cover PDF from front art was written');
+  if (inCover) {
+    const sz = (await PDFDocument.load(readFileSync(join(out, inCover)))).getPage(0).getSize();
+    check(sz.width > 12 * 72 && Math.abs(sz.height - 9.25 * 72) < 0.05, `cover-from-art PDF ${sz.width.toFixed(1)} x ${sz.height.toFixed(1)} pt`);
+  }
+
   // ---- Kindle eBook ------------------------------------------------------------------------------------------------
   await click('[data-tab="ebook"]');
   await sleep(300);

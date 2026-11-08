@@ -24,12 +24,10 @@
       </div>
       <nav class="tabs" aria-label="Tools" id="tabs">
         <button type="button" class="tab" data-tab="cover">Cover template</button>
+        <button type="button" class="tab" data-tab="interior">Interior</button>
         <button type="button" class="tab" data-tab="ebook">Kindle eBook</button>
         <button type="button" class="tab" data-tab="preflight">Preflight</button>
         <button type="button" class="tab" data-tab="mockup">3D mockup</button>
-        <button type="button" class="tab" disabled title="Planned: upload a Word file and get a KDP-ready interior">
-          Interior <span class="badge">Soon</span>
-        </button>
       </nav>
     </header>
 
@@ -265,6 +263,126 @@
             </figure>
           </div>
           <div class="empty" id="pf-empty">Enter your book details on the left, then choose your cover file.</div>
+        </section>
+
+        <!-- ---------- Low-content interior ---------- -->
+        <section class="panel glass results" data-screen="interior" aria-labelledby="h-interior" hidden>
+          <h1 id="h-interior" class="visually-hidden">Low-content interior builder</h1>
+          <div class="canvas-card">
+            <div class="eyebrow">Your interior PDF</div>
+            <div class="canvas-primary" id="in-primary">&ndash;</div>
+            <div class="canvas-alt" id="in-alt"></div>
+          </div>
+
+          <div class="card">
+            <h2>Book type</h2>
+            <div class="seg full" role="group" aria-label="Book type" id="in-kind"></div>
+            <p class="hint" id="in-kind-hint"></p>
+            <div class="row3">
+              <div class="field tight">
+                <span class="label">Printing</span>
+                <div class="seg full" role="group" aria-label="Printing" id="in-sided"></div>
+              </div>
+              <div class="field tight">
+                <span class="label">Bleed</span>
+                <div class="seg full" role="group" aria-label="Bleed" id="in-bleed"></div>
+              </div>
+            </div>
+            <p class="hint" id="in-sided-hint"></p>
+            <p class="hint callout" id="in-bleed-hint"></p>
+          </div>
+
+          <div class="card" id="in-coloring">
+            <h2>Pages</h2>
+            <label class="drop" id="in-drop" for="in-files">
+              <input id="in-files" type="file" multiple accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" />
+              <strong>Add your page images</strong>
+              <span>or drop PNG or JPG files here. Reorder them below.</span>
+            </label>
+            <p class="hint" id="in-size-hint"></p>
+            <ol class="page-list" id="in-list"></ol>
+            <div class="btn-row" id="in-list-actions" hidden>
+              <button type="button" class="btn subtle small" id="in-sort">Sort by file name</button>
+              <button type="button" class="btn subtle small" id="in-clear">Remove all</button>
+            </div>
+          </div>
+
+          <div class="card" id="in-journal" hidden>
+            <h2>Pages</h2>
+            <div class="row3">
+              <div class="field tight">
+                <label for="in-style">Page style</label>
+                <select id="in-style"></select>
+              </div>
+              <div class="field tight">
+                <label for="in-count">Writing pages</label>
+                <input id="in-count" type="number" inputmode="numeric" min="1" max="828" step="1" />
+              </div>
+            </div>
+            <p class="hint" id="in-style-hint"></p>
+            <label class="check"><input type="checkbox" id="in-date" /> &ldquo;Date&rdquo; line at the top of each page</label>
+            <label class="check"><input type="checkbox" id="in-numbers" /> Page numbers</label>
+          </div>
+
+          <div class="card">
+            <h2>Front pages</h2>
+            <p class="hint">Optional. Leave the title empty to start straight with your pages.</p>
+            <label class="check"><input type="checkbox" id="in-belongs" /> &ldquo;This book belongs to&rdquo; page</label>
+            <div class="field tight"><label for="in-title">Title page</label><input id="in-title" type="text" maxlength="120" placeholder="Book title" /></div>
+            <div class="row3">
+              <div class="field tight"><label for="in-subtitle">Subtitle</label><input id="in-subtitle" type="text" maxlength="160" /></div>
+              <div class="field tight"><label for="in-author">Author</label><input id="in-author" type="text" maxlength="120" /></div>
+            </div>
+            <div class="field tight">
+              <label for="in-copyright">Copyright page</label>
+              <textarea id="in-copyright" rows="3" maxlength="1500" placeholder="Printed on the back of the title page"></textarea>
+              <button type="button" class="btn subtle small" id="in-copyright-fill">Insert a standard notice</button>
+            </div>
+          </div>
+
+          <div id="in-messages" class="messages" role="status" aria-live="polite"></div>
+
+          <figure class="preview-wrap" id="in-preview-wrap">
+            <div class="preview-toolbar">
+              <button type="button" class="btn small" id="in-prev" aria-label="Previous pages">&larr;</button>
+              <span class="hint" id="in-spread-label"></span>
+              <button type="button" class="btn small" id="in-next" aria-label="Next pages">&rarr;</button>
+            </div>
+            <div class="preview spread" id="in-preview" role="img" aria-label="Interior page preview"></div>
+            <figcaption class="hint">Dashed red line: where the page is trimmed. Blue box: the margins. Keep text and important art inside it.</figcaption>
+          </figure>
+
+          <div class="card exports">
+            <h2>Download interior</h2>
+            <p class="hint" id="in-download-hint"></p>
+            <div class="btn-row wide">
+              <button type="button" class="btn primary" id="in-download">Download interior PDF</button>
+              <button type="button" class="btn subtle" id="in-use-pages">Use this page count in &ldquo;Your book&rdquo;</button>
+            </div>
+          </div>
+
+          <div class="card" id="in-cover">
+            <h2>Your cover</h2>
+            <p class="hint" id="in-cover-lead"></p>
+            <div class="table-wrap"><table id="in-cover-sizes"><thead><tr><th scope="col">Part</th><th scope="col">Size</th><th scope="col">Pixels at 300 DPI</th></tr></thead><tbody></tbody></table></div>
+            <div class="btn-col">
+              <label class="btn file" for="in-front-file">Front cover image<input id="in-front-file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" /></label>
+              <label class="btn file" for="in-back-file">Back cover image (optional)<input id="in-back-file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" /></label>
+            </div>
+            <ul class="art-status" id="in-art-status"></ul>
+            <div class="row3">
+              <label class="inline-color">Spine colour <input type="color" id="in-spine-color" /></label>
+              <label class="inline-color">Spine text colour <input type="color" id="in-spine-text-color" /></label>
+              <label class="inline-color" id="in-back-color-field">Back colour <input type="color" id="in-back-color" /></label>
+            </div>
+            <div class="field tight"><label for="in-spine-text">Spine text</label><input id="in-spine-text" type="text" maxlength="120" /><p class="hint" id="in-spine-hint"></p></div>
+            <div id="in-cover-messages" class="messages"></div>
+            <div class="preview cover-art" id="in-cover-preview" hidden></div>
+            <div class="btn-row wide">
+              <button type="button" class="btn primary" id="in-cover-download">Download cover PDF</button>
+            </div>
+            <p class="hint">KDP prints the barcode on the back cover for you, in the bottom corner next to the spine. Keep that area free of text.</p>
+          </div>
         </section>
 
         <!-- ---------- 3D mockup ---------- -->
