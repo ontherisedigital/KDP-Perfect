@@ -45,18 +45,21 @@ const REPEATS: { id: Repeat; label: string }[] = [
 ];
 
 type Drag =
-  | { mode: 'move'; id: string; sx: number; sy: number; ox: number; oy: number; moved: boolean }
+  | { mode: 'move'; id: string; sx: number; sy: number; origins: Map<string, { x: number; y: number }>; moved: boolean }
   | { mode: 'resize'; id: string; handle: string; sx: number; sy: number; o: DesignElement; keep: boolean }
   | { mode: 'rotate'; id: string; cx: number; cy: number };
 
 export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): Screen {
   let pageId = design.doc.pages[0]!.id;
-  let selected: string | null = null;
+  /** Selected element ids; handles and full properties show when exactly one is selected. */
+  let selection: string[] = [];
+  const setSel = (ids: string | string[] | null) => (selection = ids === null ? [] : Array.isArray(ids) ? ids : [ids]);
+  let marquee: { sx: number; sy: number; x: number; y: number; add: boolean } | null = null;
   let drag: Drag | null = null;
   let guides: { x?: number; y?: number }[] = [];
   const undo: string[] = [];
   const redo: string[] = [];
-  let clipboard: DesignElement | null = null;
+  let clipboard: DesignElement[] = [];
 
   const el = {
     pages: $('dz-pages'),
@@ -84,7 +87,9 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
 
   const doc = () => design.doc;
   const page = (): PageDesign => doc().pages.find((p) => p.id === pageId) ?? doc().pages[0]!;
-  const sel = () => page().elements.find((e) => e.id === selected) ?? null;
+  /** The selected element when exactly one is selected. */
+  const sel = () => (selection.length === 1 ? (page().elements.find((e) => e.id === selection[0]) ?? null) : null);
+  const selEls = () => page().elements.filter((e) => selection.includes(e.id));
 
   /** Record an undo step, then apply a change. */
   function edit(fn: () => void): void {
@@ -169,7 +174,7 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
   function addElement(type: string, x: number, y: number): DesignElement {
     const e = newElement(type, { x: round(x), y: round(y) });
     edit(() => page().elements.push(e));
-    selected = e.id;
+    setSel(e.id);
     render();
     return e;
   }
@@ -191,12 +196,118 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
     const e = newElement('image', { x: round(x), y: round(y) }, { w: round(w), h: round(h) });
     e.props.src = id;
     edit(() => page().elements.push(e));
-    selected = e.id;
+    setSel(e.id);
     render();
   }
 
   // --- canvas --------------------------------------------------------------------------------
   const round = (n: number) => Math.round(n * 1000) / 1000;
+  /** Outer box of some elements (unrotated boxes). */
+  function bbox(list: Box[]): Box {
+    const x0 = Math.min(...list.map((e) => e.x));
+    const y0 = Math.min(...list.map((e) => e.y));
+    const x1 = Math.max(...list.map((e) => e.x + e.w));
+    const y1 = Math.max(...list.map((e) => e.y + e.h));
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  }
+
+  type AlignTo = 'selection' | 'margins' | 'page';
+  let alignTo: AlignTo = 'margins';
+
+  /** Align, distribute or match sizes for the selected elements. */
+  function arrange(op: string): void {
+    const els = selEls().filter((e) => !e.locked);
+    if (!els.length) return;
+    const t = trim();
+    const target: Box = alignTo === 'page' ? { x: 0, y: 0, w: t.w, h: t.h } : alignTo === 'margins' || els.length === 1 ? safe() : bbox(els);
+    edit(() => {
+      switch (op) {
+        case 'left':
+          for (const e of els) e.x = round(target.x);
+          break;
+        case 'hcenter':
+          for (const e of els) e.x = round(target.x + (target.w - e.w) / 2);
+          break;
+        case 'right':
+          for (const e of els) e.x = round(target.x + target.w - e.w);
+          break;
+        case 'top':
+          for (const e of els) e.y = round(target.y);
+          break;
+        case 'vcenter':
+          for (const e of els) e.y = round(target.y + (target.h - e.h) / 2);
+          break;
+        case 'bottom':
+          for (const e of els) e.y = round(target.y + target.h - e.h);
+          break;
+        case 'dist-h':
+        case 'dist-v': {
+          // Equal gaps between neighbours, keeping the first and last in place.
+          if (els.length < 3) break;
+          const hz = op === 'dist-h';
+          const sorted = [...els].sort((a, b) => (hz ? a.x - b.x : a.y - b.y));
+          const first = sorted[0]!;
+          const last = sorted[sorted.length - 1]!;
+          const span = hz ? last.x + last.w - first.x : last.y + last.h - first.y;
+          const sizes = sorted.reduce((n, e) => n + (hz ? e.w : e.h), 0);
+          const gap = (span - sizes) / (sorted.length - 1);
+          let pos = hz ? first.x : first.y;
+          for (const e of sorted) {
+            if (hz) e.x = round(pos);
+            else e.y = round(pos);
+            pos += (hz ? e.w : e.h) + gap;
+          }
+          break;
+        }
+        case 'same-w':
+        case 'same-h':
+        case 'same-size': {
+          const ref = selEls().find((e) => e.id === selection[0]) ?? els[0]!; // the first one picked
+          for (const e of els) {
+            if (op !== 'same-h') e.w = ref.w;
+            if (op !== 'same-w') e.h = ref.h;
+          }
+          break;
+        }
+      }
+    });
+    render();
+  }
+
+  const ICON: Record<string, string> = {
+    left: 'M4 3v18M8 7h10v4H8zM8 13h6v4H8z',
+    hcenter: 'M12 3v18M6 7h12v4H6zM8 13h8v4H8z',
+    right: 'M20 3v18M6 7h10v4H6zM10 13h6v4h-6z',
+    top: 'M3 4h18M7 8h4v10H7zM13 8h4v6h-4z',
+    vcenter: 'M3 12h18M7 6h4v12H7zM13 8h4v8h-4z',
+    bottom: 'M3 20h18M7 6h4v10H7zM13 10h4v6h-4z',
+    'dist-h': 'M3 4v16M21 4v16M8 8h3v8H8zM13 8h3v8h-3z',
+    'dist-v': 'M4 3h16M4 21h16M8 8h8v3H8zM8 13h8v3H8z',
+  };
+  const LABEL: Record<string, string> = {
+    left: 'Align left edges',
+    hcenter: 'Align centres (horizontally)',
+    right: 'Align right edges',
+    top: 'Align top edges',
+    vcenter: 'Align middles (vertically)',
+    bottom: 'Align bottom edges',
+    'dist-h': 'Space evenly across (3 or more)',
+    'dist-v': 'Space evenly down (3 or more)',
+  };
+
+  function alignHtml(count: number): string {
+    const btn = (op: string) =>
+      `<button type="button" class="btn small subtle dz-icon" data-align="${op}" title="${LABEL[op]}" aria-label="${LABEL[op]}" ${op.startsWith('dist') && count < 3 ? 'disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[op]}"/></svg></button>`;
+    const to = (v: AlignTo, label: string, dis = false) => `<option value="${v}" ${alignTo === v ? 'selected' : ''} ${dis ? 'disabled' : ''}>${label}</option>`;
+    return `<details open><summary>Align</summary>
+      <div class="field tight"><label for="dz-align-to">Line up with</label><select id="dz-align-to">${to('margins', 'The margins (blue box)')}${to('page', 'The page edges')}${to('selection', 'Each other (the selection)', count < 2)}</select></div>
+      <div class="dz-align">${['left', 'hcenter', 'right', 'top', 'vcenter', 'bottom'].map(btn).join('')}</div>
+      ${count > 1 ? `<div class="dz-align">${btn('dist-h')}${btn('dist-v')}</div>
+      <div class="dz-arrange"><button type="button" class="btn small subtle" data-align="same-w">Same width</button><button type="button" class="btn small subtle" data-align="same-h">Same height</button><button type="button" class="btn small subtle" data-align="same-size">Same size</button></div>
+      <p class="hint">"Same" sizes match the first element you picked.</p>` : ''}
+    </details>`;
+  }
+
   const snapTo = (n: number) => (el.snap.checked ? Math.round(n / SNAP) * SNAP : n);
 
   function toInches(ev: { clientX: number; clientY: number }): { x: number; y: number } {
@@ -240,6 +351,19 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
         ${e.locked ? '' : `<line x1="${cx}" y1="${e.y * PX}" x2="${cx}" y2="${e.y * PX - 22}" class="dz-rot-line"/><circle data-handle="rotate" cx="${cx}" cy="${e.y * PX - 26}" r="6" class="dz-handle dz-rot"/>`}
       </g>`;
     }
+    // Several selected: an outline on each, and one box around them all.
+    const many = selEls();
+    if (many.length > 1) {
+      const b = bbox(many);
+      handles =
+        many.map((x) => `<rect x="${x.x * PX}" y="${x.y * PX}" width="${x.w * PX}" height="${x.h * PX}" transform="rotate(${x.rotate} ${(x.x + x.w / 2) * PX} ${(x.y + x.h / 2) * PX})" class="dz-sel-box"/>`).join('') +
+        `<rect x="${b.x * PX - 4}" y="${b.y * PX - 4}" width="${b.w * PX + 8}" height="${b.h * PX + 8}" class="dz-group-box"/>`;
+    }
+    if (marquee) {
+      const x0 = Math.min(marquee.sx, marquee.x);
+      const y0 = Math.min(marquee.sy, marquee.y);
+      handles += `<rect x="${x0 * PX}" y="${y0 * PX}" width="${Math.abs(marquee.x - marquee.sx) * PX}" height="${Math.abs(marquee.y - marquee.sy) * PX}" class="dz-marquee"/>`;
+    }
     const guideLines = guides
       .map((g) => (g.x !== undefined ? `<line x1="${g.x * PX}" y1="0" x2="${g.x * PX}" y2="${H}" class="dz-guide"/>` : `<line x1="0" y1="${g.y! * PX}" x2="${W}" y2="${g.y! * PX}" class="dz-guide"/>`))
       .join('');
@@ -270,33 +394,60 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
       return;
     }
     const id = t.getAttribute('data-id');
+    const additive = ev.shiftKey || ev.ctrlKey || ev.metaKey;
     if (id) {
-      selected = id;
-      const x = page().elements.find((q) => q.id === id)!;
-      if (!x.locked) {
+      if (additive) {
+        // Shift/Ctrl-click adds an element to the selection, or takes it out.
+        setSel(selection.includes(id) ? selection.filter((x) => x !== id) : [...selection, id]);
+      } else if (!selection.includes(id)) setSel(id);
+      const movers = selEls().filter((q) => !q.locked);
+      if (selection.includes(id) && movers.length) {
         el.canvas.setPointerCapture(ev.pointerId);
         undo.push(JSON.stringify(doc()));
         redo.length = 0;
-        drag = { mode: 'move', id, sx: p.x, sy: p.y, ox: x.x, oy: x.y, moved: false };
+        drag = { mode: 'move', id, sx: p.x, sy: p.y, origins: new Map(movers.map((q) => [q.id, { x: q.x, y: q.y }])), moved: false };
       }
-    } else selected = null;
+    } else {
+      // Empty space: drag a box to select everything it touches.
+      if (!additive) setSel(null);
+      marquee = { sx: p.x, sy: p.y, x: p.x, y: p.y, add: additive };
+      el.canvas.setPointerCapture(ev.pointerId);
+    }
     el.canvas.focus({ preventScroll: true });
     render();
   });
 
   el.canvas.addEventListener('pointermove', (ev) => {
+    const p = toInches(ev);
+    if (marquee) {
+      marquee.x = p.x;
+      marquee.y = p.y;
+      renderCanvas();
+      return;
+    }
     if (!drag) return;
     const e = page().elements.find((q) => q.id === drag!.id);
     if (!e) return;
-    const p = toInches(ev);
     guides = [];
     if (drag.mode === 'move') {
-      let x = drag.ox + p.x - drag.sx;
-      let y = drag.oy + p.y - drag.sy;
+      const origins = drag.origins;
+      let dx = p.x - drag.sx;
+      let dy = p.y - drag.sy;
       drag.moved = true;
-      if (el.snap.checked && !ev.altKey) [x, y] = snapMove(e, x, y);
-      e.x = round(x);
-      e.y = round(y);
+      if (el.snap.checked && !ev.altKey) {
+        // Snap the whole selection by its outer box.
+        const b = bbox(page().elements.filter((q) => origins.has(q.id)).map((q) => ({ ...q, ...origins.get(q.id)! })));
+        const [nx, ny] = snapMove(b, b.x + dx, b.y + dy, new Set(origins.keys()));
+        dx = nx - b.x;
+        dy = ny - b.y;
+      }
+      for (const [qid, o] of origins) {
+        const q = page().elements.find((z) => z.id === qid);
+        if (q) {
+          q.x = round(o.x + dx);
+          q.y = round(o.y + dy);
+        }
+      }
     } else if (drag.mode === 'resize') {
       resize(e, drag, p, ev.shiftKey || drag.keep);
     } else {
@@ -309,6 +460,22 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
   });
 
   const endDrag = () => {
+    if (marquee) {
+      const m = marquee;
+      marquee = null;
+      const x0 = Math.min(m.sx, m.x);
+      const x1 = Math.max(m.sx, m.x);
+      const y0 = Math.min(m.sy, m.y);
+      const y1 = Math.max(m.sy, m.y);
+      if (x1 - x0 > 0.02 || y1 - y0 > 0.02) {
+        const hit = page()
+          .elements.filter((q) => q.x < x1 && q.x + q.w > x0 && q.y < y1 && q.y + q.h > y0)
+          .map((q) => q.id);
+        setSel(m.add ? [...new Set([...selection, ...hit])] : hit);
+      }
+      render();
+      return;
+    }
     if (!drag) return;
     if (drag.mode === 'move' && !drag.moved) undo.pop();
     drag = null;
@@ -322,13 +489,13 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
   el.canvas.addEventListener('pointercancel', endDrag);
 
   /** Snap the moving element's edges and centre to the page centre, margins and other elements. */
-  function snapMove(e: DesignElement, x: number, y: number): [number, number] {
+  function snapMove(e: Box, x: number, y: number, exclude: Set<string>): [number, number] {
     const t = trim();
     const s = safe();
     const xs = [0, t.w / 2, t.w, s.x, s.x + s.w];
     const ys = [0, t.h / 2, t.h, s.y, s.y + s.h];
     for (const o of page().elements)
-      if (o.id !== e.id) {
+      if (!exclude.has(o.id)) {
         xs.push(o.x, o.x + o.w / 2, o.x + o.w);
         ys.push(o.y, o.y + o.h / 2, o.y + o.h);
       }
@@ -438,49 +605,53 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
 
   // Keyboard: delete, nudge, undo/redo, duplicate, copy/paste.
   el.canvas.addEventListener('keydown', (e) => {
-    const x = sel();
     const k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && k === 'z') return e.preventDefault(), e.shiftKey ? doRedo() : doUndo();
-    if ((e.ctrlKey || e.metaKey) && k === 'y') return e.preventDefault(), doRedo();
-    if (!x) return;
+    const mod = e.ctrlKey || e.metaKey;
+    if (mod && k === 'z') return e.preventDefault(), e.shiftKey ? doRedo() : doUndo();
+    if (mod && k === 'y') return e.preventDefault(), doRedo();
+    if (mod && k === 'a') return e.preventDefault(), setSel(page().elements.map((q) => q.id)), render();
+    if (mod && k === 'v' && clipboard.length) return e.preventDefault(), paste();
+    const els = selEls();
+    if (!els.length) return;
+    if (k === 'escape') return setSel(null), render();
     if (k === 'delete' || k === 'backspace') return e.preventDefault(), remove();
-    if ((e.ctrlKey || e.metaKey) && k === 'd') return e.preventDefault(), duplicate();
-    if ((e.ctrlKey || e.metaKey) && k === 'c') return (clipboard = structuredClone(x)), undefined;
-    if ((e.ctrlKey || e.metaKey) && k === 'v' && clipboard) return e.preventDefault(), paste();
+    if (mod && k === 'd') return e.preventDefault(), duplicate();
+    if (mod && k === 'c') return (clipboard = structuredClone(els)), undefined;
     const step = e.shiftKey ? 0.1 : 0.01;
     const mv: Record<string, [number, number]> = { arrowleft: [-step, 0], arrowright: [step, 0], arrowup: [0, -step], arrowdown: [0, step] };
-    if (mv[k] && !x.locked) {
+    if (mv[k]) {
       e.preventDefault();
       edit(() => {
-        x.x = round(x.x + mv[k]![0]);
-        x.y = round(x.y + mv[k]![1]);
+        for (const x of els)
+          if (!x.locked) {
+            x.x = round(x.x + mv[k]![0]);
+            x.y = round(x.y + mv[k]![1]);
+          }
       });
       render();
     }
   });
 
   function remove(): void {
-    const x = sel();
-    if (!x) return;
-    edit(() => (page().elements = page().elements.filter((q) => q.id !== x.id)));
-    selected = null;
+    const ids = new Set(selection);
+    if (!ids.size) return;
+    edit(() => (page().elements = page().elements.filter((q) => !ids.has(q.id))));
+    setSel(null);
     render();
   }
-  function duplicate(): void {
-    const x = sel();
-    if (!x) return;
-    const c = { ...structuredClone(x), id: newElement(x.type, { x: 0, y: 0 }).id, x: round(x.x + 0.2), y: round(x.y + 0.2), locked: false };
-    edit(() => page().elements.push(c));
-    selected = c.id;
+  /** Copies of `src`, offset a little, added to the page and selected. */
+  function addCopies(src: DesignElement[]): void {
+    const copies = src.map((x) => ({ ...structuredClone(x), id: newElement(x.type, { x: 0, y: 0 }).id, x: round(x.x + 0.2), y: round(x.y + 0.2), locked: false }));
+    edit(() => page().elements.push(...copies));
+    setSel(copies.map((c) => c.id));
     render();
   }
+  const duplicate = () => addCopies(selEls());
   function paste(): void {
-    if (!clipboard) return;
-    const c = { ...structuredClone(clipboard), id: newElement(clipboard.type, { x: 0, y: 0 }).id, x: round(clipboard.x + 0.2), y: round(clipboard.y + 0.2) };
-    edit(() => page().elements.push(c));
-    selected = c.id;
-    render();
+    addCopies(clipboard);
+    clipboard = clipboard.map((c) => ({ ...c, x: round(c.x + 0.2), y: round(c.y + 0.2) }));
   }
+
   function doUndo(): void {
     const s = undo.pop();
     if (!s) return;
@@ -532,6 +703,22 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
 
   function renderProps(): void {
     const x = sel();
+    const many = selEls();
+    if (alignTo === 'selection' && many.length < 2) alignTo = 'margins';
+    if (many.length > 1) {
+      const locked = many.every((e) => e.locked);
+      el.props.innerHTML = `<h3>${many.length} elements selected</h3>
+        <div class="dz-arrange">
+          <button type="button" class="btn small subtle" data-act="dup" title="Duplicate (Ctrl+D)">Duplicate</button>
+          <button type="button" class="btn small subtle" data-act="front">Front</button>
+          <button type="button" class="btn small subtle" data-act="back">Back</button>
+          <button type="button" class="btn small subtle" data-act="lock">${locked ? 'Unlock' : 'Lock'}</button>
+          <button type="button" class="btn small subtle danger" data-act="del" title="Delete (Del)">Delete</button>
+        </div>
+        ${alignHtml(many.length)}
+        <p class="hint">Shift- or Ctrl-click to add or remove elements; drag on an empty part of the page to box-select; Ctrl+A selects everything. Drag any selected element to move them all.</p>`;
+      return;
+    }
     if (!x) {
       const p = page();
       el.props.innerHTML = `<h3>Page layout</h3>
@@ -558,6 +745,7 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
         <button type="button" class="btn small subtle" data-act="lock">${x.locked ? 'Unlock' : 'Lock'}</button>
         <button type="button" class="btn small subtle danger" data-act="del" title="Delete (Del)">Delete</button>
       </div>
+      ${alignHtml(1)}
       <details open><summary>Position and size (inches)</summary><div class="dz-geo">
         ${(['x', 'y', 'w', 'h', 'rotate'] as const).map((k) => `<label>${{ x: 'X', y: 'Y', w: 'Width', h: 'Height', rotate: 'Rotate°' }[k]}<input type="number" step="${k === 'rotate' ? 1 : 0.01}" data-geo="${k}" value="${x[k]}"/></label>`).join('')}
       </div></details>
@@ -595,6 +783,10 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
       edit(() => (page().mirror = t.checked));
       return;
     }
+    if (t.id === 'dz-align-to') {
+      alignTo = t.value as AlignTo;
+      return;
+    }
     if (t.tagName === 'SELECT' || t.type === 'checkbox') renderProps();
   });
   el.props.addEventListener('click', (ev) => {
@@ -609,21 +801,26 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
     const pa = t.closest<HTMLElement>('[data-page-act]')?.dataset.pageAct;
     if (pa === 'dup') return duplicatePage();
     if (pa === 'del') return deletePage();
+    const align = t.closest<HTMLElement>('[data-align]')?.dataset.align;
+    if (align) return arrange(align);
     const act = t.closest<HTMLElement>('[data-act]')?.dataset.act;
-    if (!act || !x) return;
-    const els = page().elements;
+    const chosen = selEls();
+    if (!act || !chosen.length) return;
     if (act === 'del') return remove();
     if (act === 'dup') return duplicate();
     edit(() => {
+      const pg = page();
       if (act === 'front' || act === 'back') {
-        const i = els.indexOf(x);
-        els.splice(i, 1);
-        if (act === 'front') els.push(x);
-        else els.unshift(x);
-      } else if (act === 'center') {
+        // Keep the chosen elements' order among themselves.
+        const rest = pg.elements.filter((e) => !chosen.includes(e));
+        pg.elements = act === 'front' ? [...rest, ...chosen] : [...chosen, ...rest];
+      } else if (act === 'center' && x) {
         const tr = trim();
         x.x = round((tr.w - x.w) / 2);
-      } else if (act === 'lock') x.locked = !x.locked;
+      } else if (act === 'lock') {
+        const to = !chosen.every((e) => e.locked);
+        for (const e of chosen) e.locked = to;
+      }
     });
     render();
   });
@@ -643,14 +840,14 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
         doc().sequence.push({ id: `s${id}`, pageId: id, count: 1, repeat: 'none' });
       });
       pageId = id;
-      selected = null;
+      setSel(null);
       render();
       return;
     }
     const b = t.closest<HTMLElement>('[data-page]');
     if (b) {
       pageId = b.dataset.page!;
-      selected = null;
+      setSel(null);
       render();
     }
   });
@@ -672,7 +869,7 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
       doc().sequence = doc().sequence.filter((s) => s.pageId !== id);
     });
     pageId = doc().pages[0]!.id;
-    selected = null;
+    setSel(null);
     render();
   }
 
@@ -689,7 +886,7 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
       const item = doc().sequence.find((s) => s.pageId === pageId);
       if (item && item.repeat === 'none') item.repeat = t.repeat;
     });
-    selected = null;
+    setSel(null);
     render();
   });
 
@@ -798,7 +995,7 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
       for (const p of d.pages) for (const e of p.elements) if (typeof e.props.src === 'string' && remap.has(e.props.src)) e.props.src = remap.get(e.props.src)!;
       edit(() => design.set(d as DesignDoc));
       pageId = d.pages[0]!.id;
-      selected = null;
+      setSel(null);
       render();
       toast('Design opened');
     } catch {

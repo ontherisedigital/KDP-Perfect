@@ -70,6 +70,18 @@ describe('elements', () => {
   });
 });
 
+describe('month grid', () => {
+  it('"Always 5 rows" keeps every day, sharing slots like 23/30', () => {
+    const e = newElement('month', { x: 0, y: 0 });
+    e.props.rows = '5';
+    e.props.dateSource = 'fixed';
+    e.props.date = '2026-08'; // August 2026 needs 6 rows when weeks start on Sunday
+    const def = ELEMENTS.find((d) => d.type === 'month')!;
+    const texts = def.render(e, { pageNumber: 1 }).filter((p) => p.k === 'text').map((p) => (p as { text: string }).text);
+    expect(texts.some((t) => t.includes('/31'))).toBe(true);
+  });
+});
+
 describe('dates', () => {
   it('builds month grids', () => {
     // March 2027 starts on a Monday.

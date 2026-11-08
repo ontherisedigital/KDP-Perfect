@@ -205,8 +205,13 @@ const TOPICS: Topic[] = [
         snaps to 15°. Hold <b>Alt</b> to move freely.</li>
         <li>Everything about the selected element is on the right: position, size and rotation in inches, shape, inside
         pattern, colours, lines, text and dates. Duplicate, bring to front, send to back, centre, lock or delete it there.</li>
+        <li><b>Select several</b>: Shift- or Ctrl-click elements, drag a box on an empty part of the page, or press
+        <b>Ctrl+A</b>. Drag any of them to move them all; delete, duplicate, copy, lock or reorder them together.</li>
+        <li><b>Align</b> (right-hand panel): line elements up by their left edges, centres, right edges, tops, middles or
+        bottoms, with the <b>margins</b>, the <b>page edges</b> or <b>each other</b>. With three or more selected,
+        <b>space them evenly</b> across or down, or give them the <b>same width, height or size</b>.</li>
         <li>Keys: <b>Delete</b> removes, arrows nudge (Shift for bigger steps), <b>Ctrl+Z</b>/<b>Ctrl+Y</b> undo and redo,
-        <b>Ctrl+D</b> duplicates, <b>Ctrl+C</b>/<b>Ctrl+V</b> copy and paste.</li>
+        <b>Ctrl+D</b> duplicates, <b>Ctrl+C</b>/<b>Ctrl+V</b> copy and paste, <b>Esc</b> clears the selection.</li>
       </ul>
       <h4>Your images</h4>
       <ul>

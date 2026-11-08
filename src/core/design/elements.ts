@@ -556,14 +556,22 @@ def({
       });
       y += hh;
     }
-    let rows: (number | null)[][] = d ? monthMatrix(d.y, d.m, ws) : Array.from({ length: 5 }, () => Array(7).fill(null));
+    const base: (number | null)[][] = d ? monthMatrix(d.y, d.m, ws) : Array.from({ length: 5 }, () => Array(7).fill(null));
+    let rows: (string | null)[][] = base.map((r) => r.map((v) => (v ? String(v) : null)));
     const want = str(p, 'rows', 'auto');
     if (want !== 'auto') {
       const n = Number(want);
       while (rows.length < n) rows.push(Array(7).fill(null));
       if (rows.length > n) {
-        // Fold overflow days into the last row's slots ("23/30" style) by keeping both numbers.
-        rows = rows.slice(0, n);
+        // Share slots like paper calendars do: days that don't fit go in the last row as "23/30".
+        const keep = rows.slice(0, n);
+        for (const extra of rows.slice(n))
+          extra.forEach((v, ci) => {
+            if (!v) return;
+            const last = keep[n - 1]!;
+            last[ci] = last[ci] ? `${last[ci]}/${v}` : v;
+          });
+        rows = keep;
       }
     }
     const rh = (el.h - y - gap * (rows.length - 1)) / rows.length;
@@ -571,7 +579,7 @@ def({
     rows.forEach((r, ri) =>
       r.forEach((day, ci) => {
         if (hide && day === null) return;
-        out.push(...slot({ x: ci * (cw + gap), y: y + ri * (rh + gap), w: cw, h: rh }, p, day ? String(day) : '', num(p, 'fontSize', 8)));
+        out.push(...slot({ x: ci * (cw + gap), y: y + ri * (rh + gap), w: cw, h: rh }, p, day ?? '', num(p, 'fontSize', 8)));
       }),
     );
     return out;

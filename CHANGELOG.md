@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- Page designer: **multi-select** (Shift/Ctrl-click, box select, Ctrl+A) to move, delete, duplicate, copy, lock and reorder elements together.
+- Page designer: **alignment tools**: align left, centre, right, top, middle or bottom to the margins, the page edges or each other; space evenly across or down; make elements the same width, height or size.
+
+### Fixed
+- Month grid "Always 5 rows" no longer drops the last days of 6-row months; they share slots (23/30) like printed calendars.
+
 ## [0.5.0] - 2026-11-08
 
 ### Added
