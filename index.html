@@ -25,10 +25,16 @@
       <nav class="tabs" aria-label="Tools" id="tabs">
         <button type="button" class="tab" data-tab="cover">Cover template</button>
         <button type="button" class="tab" data-tab="interior">Interior</button>
+        <button type="button" class="tab" data-tab="designer">Page designer</button>
+        <button type="button" class="tab" data-tab="puzzles">Puzzles</button>
         <button type="button" class="tab" data-tab="ebook">Kindle eBook</button>
         <button type="button" class="tab" data-tab="preflight">Preflight</button>
         <button type="button" class="tab" data-tab="mockup">3D mockup</button>
       </nav>
+      <button type="button" class="btn small guide-btn" data-guide="start" title="How everything works (F1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 16.2a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Zm1.4-5.1c-.5.3-.6.5-.6 1v.4h-2.1v-.6c0-1.2.5-1.8 1.4-2.4.7-.5 1.1-.8 1.1-1.5 0-.7-.6-1.2-1.4-1.2-.9 0-1.5.5-1.6 1.4H8.1C8.2 8 9.8 6.6 12 6.6c2.1 0 3.6 1.2 3.6 3 0 1.3-.7 2-2.2 3.5Z"/></svg>
+        <span>User Guide</span>
+      </button>
     </header>
 
     <main class="layout" id="main">
@@ -290,6 +296,7 @@
             </div>
             <p class="hint" id="in-sided-hint"></p>
             <p class="hint callout" id="in-bleed-hint"></p>
+            <p class="hint"><a href="#" data-guide="interior">Read more about printing, bleed and margins in the User Guide</a></p>
           </div>
 
           <div class="card" id="in-coloring">
@@ -305,6 +312,12 @@
               <button type="button" class="btn subtle small" id="in-sort">Sort by file name</button>
               <button type="button" class="btn subtle small" id="in-clear">Remove all</button>
             </div>
+          </div>
+
+          <div class="card" id="in-designed" hidden>
+            <h2>Pages</h2>
+            <p id="in-designed-count"></p>
+            <button type="button" class="btn subtle" id="in-open-designer">Open the Page designer</button>
           </div>
 
           <div class="card" id="in-journal" hidden>
@@ -382,6 +395,110 @@
               <button type="button" class="btn primary" id="in-cover-download">Download cover PDF</button>
             </div>
             <p class="hint">KDP prints the barcode on the back cover for you, in the bottom corner next to the spine. Keep that area free of text.</p>
+          </div>
+        </section>
+
+        <!-- ---------- Page designer ---------- -->
+        <section class="panel glass results designer" data-screen="designer" aria-labelledby="h-designer" hidden>
+          <h1 id="h-designer" class="visually-hidden">Page designer</h1>
+          <div class="dz-top">
+            <div class="dz-pages" id="dz-pages" role="tablist" aria-label="Page layouts"></div>
+            <div class="dz-tools">
+              <select id="dz-template" aria-label="Start from a template"></select>
+              <button type="button" class="btn small subtle" id="dz-undo" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
+              <button type="button" class="btn small subtle" id="dz-redo" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button>
+              <label class="check small"><input type="checkbox" id="dz-snap" checked /> Snap</label>
+              <label class="check small"><input type="checkbox" id="dz-grid" /> Grid</label>
+              <a href="#" class="hint" data-guide="designer">How it works</a>
+            </div>
+          </div>
+          <p class="hint" id="dz-size"></p>
+
+          <div class="dz-main">
+            <aside class="dz-lib glass-inset" aria-label="Element library">
+              <div class="dz-lib-scroll" id="dz-lib"></div>
+            </aside>
+
+            <div class="dz-stage">
+              <div class="dz-canvas" id="dz-canvas" tabindex="0" aria-label="Page canvas. Drop elements and images here."></div>
+              <div class="dz-stage-bar">
+                <span class="hint" id="dz-date-label"></span>
+                <span class="hint" id="dz-warn"></span>
+              </div>
+            </div>
+
+            <aside class="dz-props glass-inset" aria-label="Properties">
+              <div id="dz-props"></div>
+            </aside>
+          </div>
+
+          <div class="card">
+            <h2>Page order (your book)</h2>
+            <p class="hint">Repeat each layout as many times as you need. Dated layouts get the next day, week or month on every copy.</p>
+            <div class="row3">
+              <div class="field tight"><label for="dz-start">Planner starts on</label><input id="dz-start" type="date" /></div>
+              <div class="field tight"><label for="dz-weekstart">Weeks start on</label><select id="dz-weekstart"><option value="mon">Monday</option><option value="sun">Sunday</option></select></div>
+            </div>
+            <table class="dz-seq"><thead><tr><th>Layout</th><th>Copies</th><th>Dates</th><th></th></tr></thead><tbody id="dz-seq"></tbody></table>
+            <div class="btn-row">
+              <button type="button" class="btn subtle small" id="dz-seq-add">Add a row</button>
+              <button type="button" class="btn subtle small" id="dz-year">Make a year planner…</button>
+            </div>
+            <p class="hint" id="dz-seq-total"></p>
+            <div class="btn-row wide">
+              <button type="button" class="btn primary" id="dz-to-interior">Build the book on the Interior tab</button>
+              <button type="button" class="btn subtle" id="dz-export">Save design file</button>
+              <label class="btn subtle file" for="dz-import">Open design file<input id="dz-import" type="file" accept=".json,application/json" /></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---------- Puzzles ---------- -->
+        <section class="panel glass results" data-screen="puzzles" aria-labelledby="h-puzzles" hidden>
+          <h1 id="h-puzzles" class="visually-hidden">Puzzle builder</h1>
+          <div class="canvas-card">
+            <div class="eyebrow">Your puzzle book</div>
+            <div class="canvas-primary" id="pz-primary">&ndash;</div>
+            <div class="canvas-alt">Word searches, crosswords, mazes and sudoku, with answer pages at the back.</div>
+          </div>
+
+          <div class="card">
+            <h2>Add a puzzle</h2>
+            <div class="btn-row" id="pz-add"></div>
+            <ol class="page-list pz-list" id="pz-list"></ol>
+          </div>
+
+          <div class="card" id="pz-editor" hidden>
+            <h2 id="pz-editor-title">Puzzle</h2>
+            <div class="field tight"><label for="pz-title">Title</label><input id="pz-title" type="text" maxlength="80" /></div>
+            <div class="field tight" id="pz-words-field">
+              <label for="pz-words" id="pz-words-label">Words</label>
+              <textarea id="pz-words" rows="8"></textarea>
+              <p class="hint" id="pz-words-hint"></p>
+            </div>
+            <div class="row3">
+              <div class="field tight" id="pz-size-field"><label for="pz-size" id="pz-size-label">Grid size</label><input id="pz-size" type="number" min="5" max="30" step="1" /></div>
+              <div class="field tight" id="pz-diff-field"><label for="pz-diff">Difficulty</label><select id="pz-diff"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+            </div>
+            <div id="pz-ws-opts">
+              <label class="check"><input type="checkbox" id="pz-diag" /> Diagonal words</label>
+              <label class="check"><input type="checkbox" id="pz-back" /> Backwards words (harder)</label>
+            </div>
+            <div id="pz-messages" class="messages"></div>
+            <div class="btn-row">
+              <button type="button" class="btn subtle" id="pz-shuffle">New layout</button>
+              <button type="button" class="btn subtle" id="pz-show-sol">Show the answer</button>
+            </div>
+            <div class="preview pz-preview" id="pz-preview"></div>
+          </div>
+
+          <div class="card">
+            <h2>Answers</h2>
+            <div class="seg full" role="group" aria-label="Answer pages" id="pz-solutions"></div>
+            <p class="hint">Answer pages are printed after all the puzzles.</p>
+            <div class="btn-row wide">
+              <button type="button" class="btn primary" id="pz-to-interior">Build the book on the Interior tab</button>
+            </div>
           </div>
         </section>
 

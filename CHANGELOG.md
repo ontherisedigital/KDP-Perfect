@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- **Page designer** tab: build planner, journal and notebook pages from a modular element library. Calendar (day slot, week, month grid, mini month, year at a glance, date heading), planner (checklist, lists, hourly schedule, habit tracker, counter / water tracker, table), bullet journal (year in pixels, key, daily log, banner, mood scale), writing areas and notes boxes, text, shapes, lines, dividers, images and page numbers.
+- 19 shapes for every slot and frame (rectangle, rounded with a corner slider, pill, circle, hexagon, octagon, diamond, arch, ticket, tag, banner, shield, speech bubble, heart, star, flower, cloud, leaf, water drop), each unlined, lined, dotted or grid inside.
+- Drag and drop: elements from the library, image files from your computer (kept locally), images onto frames; move, resize, rotate, snapping guides, undo/redo, keyboard shortcuts, templates, mirrored left-hand pages.
+- Dated planners: daily, weekly or monthly page repeats from a start date, and a one-click year planner (each month followed by its weeks). Designs save and open as files, images included.
+- **Puzzles** tab: word search (grid size, diagonal and backwards words), crossword (built and numbered from your answers and clues), maze and sudoku (easy, medium, hard; unique solutions). Seeded so puzzles rebuild identically; answer pages at the back, 4 or 1 per page. The Interior tab's **Puzzle book** type turns them into a print-ready PDF.
+- Interior tab: **My designed pages** book type builds the designer's pages into the print-ready PDF, with the same printing, bleed, front pages and cover tools.
+- **User Guide** button in the top bar (or press F1): complete instructions for every tab, plus uploading to KDP, tips and tricks, troubleshooting, and privacy and help. Works offline. The Interior tab links to its bleed and margins section.
+
 ## [0.4.0] - 2026-11-08
 
 ### Added

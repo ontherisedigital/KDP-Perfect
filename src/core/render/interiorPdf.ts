@@ -11,6 +11,8 @@ import { PDFDocument, clip as clipOp, degrees, endPath, grayscale, LineCapStyle,
 import type { CoverLayout, Rect } from '../cover';
 import { contentBox, styleMarks, trimBox, type InteriorPlan } from '../lowcontent';
 import { PT_PER_INCH } from '../units';
+import { drawPrimsPdf } from '../design/render';
+import type { Prim } from '../design/prims';
 
 export interface PdfImage {
   bytes: Uint8Array;
@@ -22,6 +24,15 @@ export interface PdfFonts {
   display: Uint8Array;
   /** Body text (copyright, page numbers). */
   body: Uint8Array;
+  /** Bold serif accents (page designer). Falls back to `display`. */
+  accent?: Uint8Array;
+}
+
+/** Draws `custom` pages: returns primitives in page coordinates for page `n` (1-based), item `index`. */
+export interface CustomPages {
+  render(index: number, page: { n: number; origin: { x: number; y: number }; recto: boolean; trimWidth: number }): Prim[];
+  /** Images the primitives reference, by id. */
+  images?: Map<string, PdfImage & { widthPx: number; heightPx: number }>;
 }
 
 const P = (inches: number) => inches * PT_PER_INCH;
@@ -59,13 +70,16 @@ function wrap(font: PDFFont, text: string, size: number, maxW: number): string[]
   return out;
 }
 
-export async function buildInteriorPdf(plan: InteriorPlan, images: PdfImage[], fonts: PdfFonts): Promise<Uint8Array> {
+export async function buildInteriorPdf(plan: InteriorPlan, images: PdfImage[], fonts: PdfFonts, custom?: CustomPages): Promise<Uint8Array> {
   const l = plan.layout;
   if (!plan.valid || !l) throw new Error('The interior has problems to fix first.');
   const input = plan.input;
   const doc = await newDoc(input.front.title || 'Interior');
   const display = await doc.embedFont(fonts.display);
   const body = await doc.embedFont(fonts.body);
+  const accent = fonts.accent ? await doc.embedFont(fonts.accent) : display;
+  const customImages = new Map<string, { img: PDFImage; w: number; h: number }>();
+  for (const [id, im] of custom?.images ?? []) customImages.set(id, { img: await embed(doc, im), w: im.widthPx, h: im.heightPx });
   const W = P(l.pageWidth);
   const H = P(l.pageHeight);
   /** Scene y (down, inches) to PDF y (up, points). */
@@ -134,6 +148,12 @@ export async function buildInteriorPdf(plan: InteriorPlan, images: PdfImage[], f
           const t = 'Date';
           page.drawText(t, { x: P(box.x + box.w - 2) - body.widthOfTextAtSize(t, size) - 6, y: Y(box.y + 0.3) + 2, size, font: body, color: grayscale(0.4) });
         }
+        break;
+      }
+      case 'custom': {
+        if (!custom) break;
+        const prims = custom.render(pp.index, { n: pp.n, origin: { x: trim.x, y: trim.y }, recto: pp.n % 2 === 1, trimWidth: trim.w });
+        drawPrimsPdf({ page, H, fonts: { display, body, accent }, images: customImages }, prims);
         break;
       }
       case 'belongs': {

@@ -46,7 +46,10 @@ function createWindow() {
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (event, url) => {
-    if (!isAppUrl(url)) event.preventDefault();
+    if (isAppUrl(url)) return;
+    event.preventDefault();
+    // Email links in the User Guide open the default mail program.
+    if (/^mailto:/i.test(url)) shell.openExternal(url);
   });
 
   if (DEV_URL) win.loadURL(DEV_URL);

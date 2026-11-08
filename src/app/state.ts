@@ -8,7 +8,7 @@ import { PAGE_STYLES, type LowContentKind, type PageStyle, type Sided } from '..
 
 export type SafeChoice = 'standard' | 'conservative';
 export type Dpi = 150 | 300;
-export type ScreenId = 'cover' | 'ebook' | 'preflight' | 'mockup' | 'interior';
+export type ScreenId = 'cover' | 'ebook' | 'preflight' | 'mockup' | 'interior' | 'designer' | 'puzzles';
 export type EbookPreset = 'ideal' | 'hd' | 'min' | 'custom';
 
 export interface EbookState {
@@ -32,7 +32,7 @@ export interface MockupState {
 }
 
 export interface InteriorState {
-  kind: LowContentKind;
+  kind: LowContentKind | 'designed' | 'puzzles';
   sided: Sided;
   bleed: boolean;
   style: PageStyle;
@@ -140,7 +140,7 @@ export function loadState(): AppState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return s;
     const o = JSON.parse(raw) as Record<string, unknown>;
-    if (['cover', 'ebook', 'preflight', 'mockup', 'interior'].includes(o.screen as string)) s.screen = o.screen as ScreenId;
+    if (['cover', 'ebook', 'preflight', 'mockup', 'interior', 'designer', 'puzzles'].includes(o.screen as string)) s.screen = o.screen as ScreenId;
     if (o.binding === 'paperback' || o.binding === 'hardcover') s.binding = o.binding;
     if (typeof o.trimId === 'string') s.trimId = o.trimId;
     if (isNum(o.customWidth) && o.customWidth > 0) s.customWidth = o.customWidth;
@@ -179,7 +179,7 @@ export function loadState(): AppState {
     if (isRec(o.interior)) {
       const i = o.interior;
       const t = s.interior;
-      if (i.kind === 'coloring' || i.kind === 'journal') t.kind = i.kind;
+      if (i.kind === 'coloring' || i.kind === 'journal' || i.kind === 'designed' || i.kind === 'puzzles') t.kind = i.kind;
       if (i.sided === 'single' || i.sided === 'double') t.sided = i.sided;
       if (typeof i.bleed === 'boolean') t.bleed = i.bleed;
       if (PAGE_STYLES.some((p) => p.id === i.style)) t.style = i.style as PageStyle;

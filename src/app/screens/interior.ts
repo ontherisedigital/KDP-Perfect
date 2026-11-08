@@ -33,59 +33,16 @@ import {
 import type { Ctx, Screen } from '../context';
 import { $, bindFileInput, esc, segment, times, toast } from '../dom';
 import { saveFile } from '../files';
-
-interface PageImage extends PdfImage {
-  id: number;
-  name: string;
-  widthPx: number;
-  heightPx: number;
-  url: string;
-}
-
-let nextId = 1;
-
-/** Read an image file into PNG/JPEG bytes the PDF can embed (other formats are converted to PNG). */
-async function readImage(file: File): Promise<PageImage> {
-  const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
-  const isPng = head[0] === 0x89 && head[1] === 0x50;
-  const isJpg = head[0] === 0xff && head[1] === 0xd8;
-  const bmp = await createImageBitmap(file);
-  const { width, height } = bmp;
-  let bytes: Uint8Array;
-  let type: 'png' | 'jpg';
-  let blob: Blob = file;
-  if (isPng || isJpg) {
-    bytes = new Uint8Array(await file.arrayBuffer());
-    type = isPng ? 'png' : 'jpg';
-    bmp.close();
-  } else {
-    const c = document.createElement('canvas');
-    c.width = width;
-    c.height = height;
-    c.getContext('2d')!.drawImage(bmp, 0, 0);
-    bmp.close();
-    blob = await new Promise<Blob>((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('Could not convert the image'))), 'image/png'));
-    bytes = new Uint8Array(await blob.arrayBuffer());
-    type = 'png';
-  }
-  return { id: nextId++, name: file.name, widthPx: width, heightPx: height, bytes, type, url: URL.createObjectURL(blob) };
-}
-
-let fontCache: Promise<PdfFonts> | null = null;
-/** The PDF fonts are bundled inline (KDP needs embedded fonts, and `fetch` cannot read `file://` in the desktop app). */
-function loadFonts(): Promise<PdfFonts> {
-  const decode = (dataUrl: string) => Uint8Array.from(atob(dataUrl.slice(dataUrl.indexOf(',') + 1)), (c) => c.charCodeAt(0));
-  fontCache ??= Promise.all([import('../fonts/fredoka-latin.woff2?inline'), import('../fonts/dosis-latin.woff2?inline')]).then(([d, b]) => ({
-    display: decode(d.default),
-    body: decode(b.default),
-  }));
-  return fontCache;
-}
+import { design } from '../designStore';
+import { puzzles } from '../puzzleStore';
+import { expandSequence, primsToSvg, renderPage, type ExpandedPage } from '../../core';
+import { measureText } from '../media';
+import { loadFonts, readImage, type PageImage } from '../media';
 
 const pxAt300 = (w: number, h: number) => times(`${toPixels(w, 300)} x ${toPixels(h, 300)} px`);
 const n2 = (n: number) => (Math.round(n * 1000) / 1000).toString();
 
-export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void }): Screen {
+export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void; show(id: 'designer' | 'puzzles'): void }): Screen {
   const s = ctx.state.interior;
   let images: PageImage[] = [];
   let spread = 0;
@@ -142,18 +99,26 @@ export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void }): Sc
     coverMessages: $('in-cover-messages'),
     coverPreview: $('in-cover-preview'),
     coverDownload: $<HTMLButtonElement>('in-cover-download'),
+    designedCard: $('in-designed'),
+    designedCount: $('in-designed-count'),
+    openDesigner: $<HTMLButtonElement>('in-open-designer'),
   };
+  el.openDesigner.addEventListener('click', () => ctx.show(s.kind === 'puzzles' ? 'puzzles' : 'designer'));
+  design.onChange(() => refresh());
+  puzzles.onChange(() => refresh());
 
   const change = () => {
     ctx.save();
     refresh();
   };
 
-  const kindSeg = segment<LowContentKind>(
+  const kindSeg = segment<LowContentKind | 'designed' | 'puzzles'>(
     $('in-kind'),
     [
       { value: 'coloring', label: 'Coloring / activity book' },
-      { value: 'journal', label: 'Journal / notebook / planner' },
+      { value: 'journal', label: 'Simple journal / notebook' },
+      { value: 'designed', label: 'My designed pages' },
+      { value: 'puzzles', label: 'Puzzle book' },
     ],
     () => s.kind,
     (v) => {
@@ -345,10 +310,35 @@ export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void }): Sc
       bleed: s.bleed,
       sided: s.sided,
       front: { title: s.title, subtitle: s.subtitle, author: s.author, belongsTo: s.belongsTo, copyright: s.copyright },
-      content: s.kind === 'coloring' ? { kind: 'coloring', images } : { kind: 'journal', style: s.style, count: s.count, dateLine: s.dateLine },
+      content:
+        s.kind === 'coloring'
+          ? { kind: 'coloring', images }
+          : s.kind === 'designed'
+            ? { kind: 'custom', count: designed().length, noun: 'designed pages' }
+            : s.kind === 'puzzles'
+              ? { kind: 'custom', count: puzzles.pageCount(), noun: 'puzzles' }
+            : { kind: 'journal', style: s.style, count: s.count, dateLine: s.dateLine },
       pageNumbers: s.pageNumbers,
       limits: pageLimits(st.binding, t.preset, getPaper(st.paper)),
     });
+  }
+
+  /** The Page designer's pages, in book order. */
+  function designed(): ExpandedPage[] {
+    return expandSequence(design.doc);
+  }
+
+  /** Primitives for designed (or puzzle) page `index`, placed on output page `n`. */
+  function designedPrims(index: number, n: number, origin: { x: number; y: number }, trimW: number) {
+    if (s.kind === 'puzzles') {
+      const l = plan().layout;
+      if (!l) return [];
+      return puzzles.pagePrims(index, contentBox(l, n));
+    }
+    const e = designed()[index];
+    const pd = e && design.doc.pages.find((p) => p.id === e.pageId);
+    if (!e || !pd) return [];
+    return renderPage(pd, { date: e.date, pageNumber: n }, origin, pd.mirror && n % 2 === 0 ? trimW : undefined);
   }
 
   function cover(p: InteriorPlan): CoverLayout | null {
@@ -419,6 +409,10 @@ export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void }): Sc
         body = lines.map((t, i) => `<text x="${box.x * PX}" y="${(box.y + box.h) * PX - (lines.length - 1 - i) * 12}" font-size="8" fill="#222">${esc(t.slice(0, 90))}${t.length > 90 ? '…' : ''}</text>`).join('');
         break;
       }
+      case 'custom':
+        body = primsToSvg(designedPrims(page.index, page.n, { x: tb.x, y: tb.y }, tb.w), PX, measureText, design.url);
+        if (grey) body = `<g filter="url(#in-grey)">${body}</g>`;
+        break;
       case 'blank':
         body = `<text x="${cx}" y="${(tb.y + tb.h / 2) * PX}" font-size="11" text-anchor="middle" fill="#bbb">blank</text>`;
         break;
@@ -561,11 +555,28 @@ export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void }): Sc
     sidedSeg.sync();
     bleedSeg.sync();
     const journal = s.kind === 'journal';
-    el.coloring.hidden = journal;
+    const des = s.kind === 'designed' || s.kind === 'puzzles';
+    el.coloring.hidden = s.kind !== 'coloring';
     el.journal.hidden = !journal;
+    el.designedCard.hidden = !des;
+    if (des) {
+      if (s.kind === 'puzzles') {
+        const n = puzzles.book.puzzles.length;
+        el.designedCount.textContent = `${n} puzzle${n === 1 ? '' : 's'} and their answers: ${puzzles.pageCount()} pages, from the Puzzles tab.`;
+        el.openDesigner.textContent = 'Open the Puzzles tab';
+      } else {
+        const n = designed().length;
+        el.designedCount.textContent = `${n} page${n === 1 ? '' : 's'} from ${design.doc.pages.length} layout${design.doc.pages.length === 1 ? '' : 's'} in the Page designer.`;
+        el.openDesigner.textContent = 'Open the Page designer';
+      }
+    }
     el.kindHint.textContent = journal
       ? 'Generated writing pages: lined, dot grid, graph, handwriting practice or blank.'
-      : 'One image per page: coloring pages, activity pages, mazes, puzzles.';
+      : s.kind === 'puzzles'
+        ? 'Word searches, crosswords, mazes and sudoku from the Puzzles tab, with the answers at the back.'
+        : des
+        ? 'Planners, journals and notebooks you built in the Page designer, in the page order you set there.'
+        : 'One image per page: coloring pages, activity pages, mazes, puzzles.';
     el.sidedHint.textContent =
       s.sided === 'single'
         ? 'Front only: every page is printed on one side and its back is left blank. Best for coloring books, so markers can’t bleed through onto the next design.'
@@ -634,7 +645,14 @@ export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void }): Sc
   el.download.addEventListener('click', () =>
     run(el.download, 'Building PDF…', async () => {
       const p = plan();
-      const bytes = await buildInteriorPdf(p, images, await loadFonts());
+      const custom =
+        s.kind === 'designed' || s.kind === 'puzzles'
+          ? {
+              render: (i: number, pg: { n: number; origin: { x: number; y: number }; trimWidth: number }) => designedPrims(i, pg.n, pg.origin, pg.trimWidth),
+              images: new Map(design.images().map((im) => [im.id, im])),
+            }
+          : undefined;
+      const bytes = await buildInteriorPdf(p, images, await loadFonts(), custom);
       const r = await saveFile(interiorFileName(p), bytes, 'application/pdf');
       if (r.saved) toast(r.path ? `Saved ${r.path}` : 'Interior PDF downloaded');
     }),

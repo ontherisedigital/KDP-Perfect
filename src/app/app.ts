@@ -2,14 +2,17 @@ import type { CoverLayout } from '../core';
 import { initBookPanel, type BookResult } from './book';
 import type { Ctx, Screen } from './context';
 import { $, initSheen, moveInk } from './dom';
+import { initGuide } from './guide';
 import { initCoverScreen } from './screens/cover';
 import { initEbookScreen } from './screens/ebook';
 import { initInteriorScreen } from './screens/interior';
+import { initDesignerScreen } from './screens/designer';
+import { initPuzzlesScreen } from './screens/puzzles';
 import { initMockupScreen } from './screens/mockup';
 import { initPreflightScreen } from './screens/preflight';
 import { loadState, saveState, type ScreenId } from './state';
 
-const SCREENS: ScreenId[] = ['cover', 'interior', 'ebook', 'preflight', 'mockup'];
+const SCREENS: ScreenId[] = ['cover', 'interior', 'designer', 'puzzles', 'ebook', 'preflight', 'mockup'];
 
 export function initApp(): void {
   const state = loadState();
@@ -52,7 +55,7 @@ export function initApp(): void {
     panel.write();
     onBookChange();
   };
-  for (const s of [initCoverScreen(ctx), initInteriorScreen({ ...ctx, setPages }), initEbookScreen(ctx), initPreflightScreen(ctx), initMockupScreen(ctx)]) screens.set(s.id, s);
+  for (const s of [initCoverScreen(ctx), initInteriorScreen({ ...ctx, setPages, show: (id) => show(id) }), initDesignerScreen({ ...ctx, show: (id) => show(id) }), initPuzzlesScreen({ ...ctx, show: (id) => show(id) }), initEbookScreen(ctx), initPreflightScreen(ctx), initMockupScreen(ctx)]) screens.set(s.id, s);
 
   const tabBar = $('tabs');
   tabBar.insertAdjacentHTML('afterbegin', '<span class="seg-ink" aria-hidden="true"></span>');
@@ -74,7 +77,9 @@ export function initApp(): void {
     }
     moveInk(tabBar, tabs.find((t) => t.dataset.tab === id) ?? null);
     for (const s of sections) s.hidden = s.dataset.screen !== id;
-    bookPanel.hidden = id === 'ebook';
+    bookPanel.hidden = id === 'ebook' || id === 'designer';
+    $('main').classList.toggle('wide', id === 'designer');
+    document.querySelector<HTMLElement>('.inputs')!.hidden = id === 'designer';
     ebookPanel.hidden = id !== 'ebook';
     const screen = screens.get(id);
     if (dirty.has(id)) {
@@ -87,6 +92,7 @@ export function initApp(): void {
   for (const t of tabs) t.addEventListener('click', () => show(t.dataset.tab as ScreenId));
 
   initSheen();
+  initGuide();
   book = panel.result();
   show(active);
   $('main');

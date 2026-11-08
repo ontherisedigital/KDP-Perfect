@@ -150,6 +150,12 @@ try {
   }
   await click('#binding-toggle [data-v="paperback"]');
 
+  // ---- User Guide ------------------------------------------------------------------------------------------------
+  await click('.guide-btn');
+  await sleep(200);
+  check((await evaluate("document.querySelector('dialog.guide')?.open && document.querySelectorAll('.guide-nav [data-topic]').length")) >= 10, 'User Guide opens with its topics');
+  await evaluate("document.querySelector('dialog.guide').close()");
+
   // ---- Low-content interior: journal PDF (embedded fonts under file://) and a cover from front art --------------------
   await click('[data-tab="interior"]');
   await sleep(300);
@@ -182,6 +188,18 @@ try {
     const sz = (await PDFDocument.load(readFileSync(join(out, inCover)))).getPage(0).getSize();
     check(sz.width > 12 * 72 && Math.abs(sz.height - 9.25 * 72) < 0.05, `cover-from-art PDF ${sz.width.toFixed(1)} x ${sz.height.toFixed(1)} pt`);
   }
+
+  // ---- Page designer and Puzzles -------------------------------------------------------------------------------
+  await click('[data-tab="designer"]');
+  await sleep(300);
+  await evaluate("(() => { const t = document.getElementById('dz-template'); t.value = 'day'; t.dispatchEvent(new Event('change')); })()");
+  await sleep(300);
+  check((await evaluate("document.querySelectorAll('#dz-canvas .dz-hit').length")) >= 5, 'Page designer draws a template');
+  await click('[data-tab="puzzles"]');
+  await sleep(200);
+  await click('#pz-add [data-type="sudoku"]');
+  await sleep(300);
+  check((await evaluate("document.querySelectorAll('#pz-preview text').length")) >= 20, 'Puzzles tab generates a sudoku');
 
   // ---- Kindle eBook ------------------------------------------------------------------------------------------------
   await click('[data-tab="ebook"]');

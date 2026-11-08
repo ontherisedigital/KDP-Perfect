@@ -56,7 +56,9 @@ export interface ImageInfo {
 
 export type ContentSpec =
   | { kind: 'coloring'; images: ImageInfo[] }
-  | { kind: 'journal'; style: PageStyle; count: number; dateLine: boolean };
+  | { kind: 'journal'; style: PageStyle; count: number; dateLine: boolean }
+  /** Pages drawn by a caller-supplied renderer (page designer, puzzle books). */
+  | { kind: 'custom'; count: number; noun: string };
 
 export interface InteriorInput {
   trimWidth: number;
@@ -74,7 +76,8 @@ export type PlannedPage =
   | { n: number; kind: 'blank' }
   | { n: number; kind: 'belongs' | 'title' | 'copyright' }
   | { n: number; kind: 'image'; image: number }
-  | { n: number; kind: 'ruled'; style: PageStyle; dateLine: boolean; number: number };
+  | { n: number; kind: 'ruled'; style: PageStyle; dateLine: boolean; number: number }
+  | { n: number; kind: 'custom'; index: number };
 
 export interface Placement {
   /** Where the image is drawn (may extend past the page when it is cropped to fill). */
@@ -136,7 +139,9 @@ export function planInterior(input: InteriorInput): InteriorPlan {
   const items: Omit<PlannedPage, 'n'>[] =
     c.kind === 'coloring'
       ? c.images.map((_, i) => ({ kind: 'image' as const, image: i }))
-      : Array.from({ length: Math.max(0, Math.floor(c.count)) }, (_, i) => ({ kind: 'ruled' as const, style: c.style, dateLine: c.dateLine, number: i + 1 }));
+      : c.kind === 'custom'
+        ? Array.from({ length: Math.max(0, Math.floor(c.count)) }, (_, i) => ({ kind: 'custom' as const, index: i }))
+        : Array.from({ length: Math.max(0, Math.floor(c.count)) }, (_, i) => ({ kind: 'ruled' as const, style: c.style, dateLine: c.dateLine, number: i + 1 }));
 
   if (items.length) toRecto();
   for (const item of items) {
@@ -155,7 +160,7 @@ export function planInterior(input: InteriorInput): InteriorPlan {
   const pageCount = pages.length;
   const { min, max } = input.limits;
   if (!items.length) {
-    warnings.push({ level: 'error', code: 'no-content', message: c.kind === 'coloring' ? 'Add your page images.' : 'Choose how many journal pages you want.' });
+    warnings.push({ level: 'error', code: 'no-content', message: c.kind === 'coloring' ? 'Add your page images.' : c.kind === 'custom' ? `Add some ${c.noun}.` : 'Choose how many journal pages you want.' });
   }
   if (max === null) {
     warnings.push({ level: 'error', code: 'unavailable', message: 'This ink and paper combination is not available at this trim size.' });
@@ -166,7 +171,7 @@ export function planInterior(input: InteriorInput): InteriorPlan {
     warnings.push({
       level: 'error',
       code: 'too-few-pages',
-      message: `KDP needs at least ${min} pages for this binding. This book has ${pageCount}: add ${more} more ${c.kind === 'coloring' ? (more === 1 ? 'image' : 'images') : 'pages'}.`,
+      message: `KDP needs at least ${min} pages for this binding. This book has ${pageCount}: add ${more} more ${c.kind === 'coloring' ? (more === 1 ? 'image' : 'images') : c.kind === 'custom' ? c.noun : 'pages'}.`,
     });
   } else if (pageCount > max) {
     warnings.push({ level: 'error', code: 'too-many-pages', message: `KDP allows at most ${max} pages for this trim size and paper. This book has ${pageCount}.` });
@@ -227,12 +232,7 @@ function longestBlankRun(pages: PlannedPage[]): { inside: number; end: number } 
   return { inside, end: cur };
 }
 
-export interface Box {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+import type { Box } from './design/geometry';
 
 /** The whole PDF page (trim + bleed). */
 export const pageBox = (l: InteriorLayout): Box => ({ x: 0, y: 0, w: l.pageWidth, h: l.pageHeight });
@@ -375,6 +375,6 @@ export const BLEED_ADVICE =
 
 export function interiorFileName(plan: InteriorPlan): string {
   const t = plan.input;
-  const kind = t.content.kind === 'coloring' ? 'coloring-book' : t.content.style;
+  const kind = t.content.kind === 'coloring' ? 'coloring-book' : t.content.kind === 'custom' ? t.content.noun.replace(/\s+/g, '-') : t.content.style;
   return `kdp-interior_${kind}_${t.trimWidth}x${t.trimHeight}in_${plan.pageCount}pp_${t.bleed ? 'bleed' : 'no-bleed'}.pdf`;
 }

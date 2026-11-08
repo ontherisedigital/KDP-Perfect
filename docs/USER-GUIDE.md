@@ -1,5 +1,7 @@
 # User guide
 
+The same guide is built into the app: press **User Guide** in the top bar, or F1.
+
 The left column, **Your book**, is shared by the Cover template, Preflight and 3D mockup tabs. Fill it in once; every tab uses it. (The Kindle eBook tab has its own size picker.)
 
 ## Your book
@@ -40,6 +42,15 @@ PNG is lossless; JPG is smaller. Both are tagged with your DPI so design tools o
 | Black dashed line | **Trim line** | **Board edge** |
 | Purple dashed lines | **Spine folds** | **Spine edges** |
 | White dashed box | **Barcode area**: KDP places an ISBN barcode here if you don't supply one | same |
+
+## Interior (low-content books)
+
+Builds a print-ready interior PDF for coloring and activity books (one of your images per page) and for journals, notebooks and planners (wide or college rule, dot grid, graph, handwriting practice or blank pages). Trim size, binding and paper come from **Your book**.
+
+- **Printing: Front only** puts every page on a right-hand page with a blank back (best for coloring books: no marker bleed-through). **Front and back** prints both sides.
+- **Bleed**: choose it only if your art runs off the edge of the page; otherwise choose **No bleed**. Bleed pages are trim + 0.125" wide and + 0.25" tall and images fill them; without bleed, images are fitted inside the margins. Pick the same option on KDP.
+- Mirrored margins with KDP's page-count-based gutter; optional "This book belongs to", title and copyright pages; spread preview; checks for page-count limits, low DPI and blank-page runs. The PDF embeds every font.
+- **Your cover** shows the full-wrap, front, back and spine sizes for the finished page count. Add front (and optional back) art, spine colour and text, and download a full-wrap cover PDF. **Use this page count in "Your book"** keeps the other tabs in step.
 
 ## Kindle eBook
 

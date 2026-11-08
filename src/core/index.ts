@@ -10,3 +10,5 @@ export * from './preflight';
 export * from './mockup';
 export * from './render';
 export * from './lowcontent';
+export * from './design';
+export * from './puzzles';
