@@ -190,7 +190,7 @@ async function scrollTo(selector: string, offset = -24, ms = 800): Promise<void>
 }
 
 const setSelect = (selector: string, value: string) =>
-  js(`(() => { const e = document.querySelector(${JSON.stringify(selector)}); e.value = ${JSON.stringify(value)}; e.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  js(`(() => { const e = document.querySelector(${JSON.stringify(selector)}); e.value = ${JSON.stringify(value)}; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); })()`);
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Artwork (procedural and fictional) and uploads
@@ -367,7 +367,7 @@ async function setBook(b: { binding?: 'paperback' | 'hardcover'; trim?: string; 
   await sleep(400);
 }
 
-async function tab(id: 'cover' | 'ebook' | 'preflight' | 'mockup'): Promise<void> {
+async function tab(id: 'cover' | 'ebook' | 'preflight' | 'mockup' | 'interior' | 'designer' | 'puzzles'): Promise<void> {
   await js(`document.querySelector('[data-tab="${id}"]').click()`);
   await sleep(500);
 }
@@ -489,6 +489,106 @@ async function screenshots(): Promise<void> {
   await sleep(500);
   await shot('08-cover-template-dark');
   await theme('light');
+}
+
+/** The low-content tools: Interior, Page designer, Puzzles and the User Guide. */
+async function newToolShots(): Promise<void> {
+  await viewport(1440, 1000, 2);
+  await theme('light');
+  await resetApp();
+  await setBook({ trim: '6x9' });
+
+  // Page designer: a weekly planner and a daily planner, with a multi-selection.
+  await tab('designer');
+  await setSelect('#dz-template', 'week');
+  await sleep(700);
+  await shot('09-page-designer-weekly');
+  await js(`document.querySelector('[data-page-new]').click()`);
+  await setSelect('#dz-template', 'day');
+  await sleep(500);
+  await js(`(() => { const c = document.getElementById('dz-canvas'); c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true })); })()`);
+  await sleep(500);
+  await shot('09b-page-designer-align');
+  await js(`(() => { const c = document.getElementById('dz-canvas'); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); })()`);
+  await js(`document.querySelector('[data-page-new]').click()`);
+  await setSelect('#dz-template', 'calendar-shapes');
+  await sleep(700);
+  await shot('09c-page-designer-fun-shapes', '#dz-canvas');
+
+  // Puzzles: a word search and a crossword.
+  await tab('puzzles');
+  await js(`document.querySelector('#pz-add [data-type="wordsearch"]').click()`);
+  await sleep(600);
+  await scrollTo('#pz-editor');
+  await shot('10-puzzles-word-search');
+  await js(`document.querySelector('#pz-add [data-type="crossword"]').click()`);
+  await sleep(800);
+  await shot('10b-puzzles-crossword', '#pz-preview');
+  await js(`document.querySelector('#pz-add [data-type="maze"]').click()`);
+  await sleep(500);
+  await shot('10c-puzzles-maze', '#pz-preview');
+
+  // Interior: a journal, then the designed planner as a book.
+  await resetApp();
+  await setBook({ trim: '6x9' });
+  await tab('interior');
+  await js(`document.querySelector('#in-kind [data-v="journal"]').click()`);
+  await setSelect('#in-style', 'dot');
+  await sleep(600);
+  await shot('11-interior-journal');
+  await scrollTo('#in-preview-wrap');
+  await shot('11b-interior-preview', '#in-preview-wrap');
+  await scrollTo('#in-cover');
+  await shot('11c-cover-sizes', '#in-cover');
+
+  // User Guide.
+  await js(`window.scrollTo(0, 0)`);
+  await js(`document.querySelector('.guide-btn').click()`);
+  await sleep(400);
+  await js(`document.querySelector('[data-topic="designer"]').click()`);
+  await sleep(500);
+  await shot('12-user-guide');
+  await js(`document.querySelector('dialog.guide').close()`);
+}
+
+async function newToolVideos(): Promise<void> {
+  await viewport(1440, 1000, 1);
+  await theme('light');
+  await resetApp();
+  await setBook({ trim: '6x9' });
+  await tab('designer');
+  await record('kdp-perfect-page-designer', async () => {
+    await sleep(1000);
+    await setSelect('#dz-template', 'month');
+    await sleep(1400);
+    // Drag a heart day slot from the library onto the page.
+    await click('[data-add="day-slot"]');
+    await sleep(900);
+    await setSelect('#dz-props [data-key="shape"]', 'heart');
+    await sleep(700);
+    await setSelect('#dz-props [data-key="pattern"]', 'lines');
+    await sleep(900);
+    await js(`(() => { const c = document.getElementById('dz-canvas'); c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true })); })()`);
+    await sleep(1200);
+    await setSelect('#dz-align-to', 'margins');
+    await click('[data-align="hcenter"]');
+    await sleep(1500);
+  });
+
+  await tab('puzzles');
+  await record('kdp-perfect-puzzles', async () => {
+    await sleep(800);
+    await click('#pz-add [data-type="wordsearch"]');
+    await sleep(1500);
+    await click('#pz-show-sol');
+    await sleep(1500);
+    await click('#pz-add [data-type="crossword"]');
+    await sleep(1500);
+    await click('#pz-add [data-type="sudoku"]');
+    await sleep(1500);
+    await click('#pz-add [data-type="maze"]');
+    await sleep(1800);
+  });
 }
 
 async function mockups(): Promise<void> {
@@ -690,8 +790,10 @@ async function main(): Promise<void> {
     };
 
     if (want('screenshots')) await screenshots();
+    if (want('screenshots') || want('tools')) await newToolShots();
     if (want('mockups')) await mockups();
     if (want('videos')) await videos();
+    if (want('videos') || want('tools')) await newToolVideos();
 
     // The app's own template exports are marketing material too; mockup exports were already renamed into Mockups/.
     for (const f of readdirSync(DL)) {
