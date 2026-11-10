@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-10
+
 ### Changed
 - Renamed the app from KDP Perfect to **SelfPublisher Studio** (window title, installer, app ID, PDF metadata, docs).
 
@@ -100,7 +102,8 @@ First release: the cover template generator.
 - Interior margin helpers (`src/core/interior.ts`) as groundwork for the planned interior formatter.
 - Test suite with golden values extracted from Amazon's KDP Print File Setup Calculator V5, plus an end-to-end desktop smoke test.
 
-[Unreleased]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.4.0...v0.5.0
