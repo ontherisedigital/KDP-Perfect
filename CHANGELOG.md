@@ -4,9 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-09
+
 ### Changed
 - New app icon (installer, window, taskbar) and logo in the top bar.
-- Prettier cover template to match the app: softer theme colours, Fredoka and Dosis lettering, and the size details, colour key and barcode box on rounded cards. Guides stay square and exact. PDF templates embed the app's fonts.
+- Prettier cover template to match the app: a soft blue page (#D3EBF3), sky-blue trim-variance and margin bands (#1CB6E7), softer theme colours, Fredoka and Dosis lettering, and the size details, colour key and barcode box on rounded cards. Guides stay square and exact. PDF templates embed the app's fonts.
 
 ## [0.6.0] - 2026-11-08
 
@@ -91,7 +93,8 @@ First release: the cover template generator.
 - Interior margin helpers (`src/core/interior.ts`) as groundwork for the planned interior formatter.
 - Test suite with golden values extracted from Amazon's KDP Print File Setup Calculator V5, plus an end-to-end desktop smoke test.
 
-[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.3.0...v0.4.0
