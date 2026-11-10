@@ -6,7 +6,7 @@
 
 import { BLEED_ADVICE } from '../core';
 
-const REPO = 'https://github.com/ontherisedigital/KDP-Perfect';
+const REPO = 'https://github.com/ontherisedigital/SelfPublisher-Studio';
 const SUPPORT_EMAIL = 'admin@ontherisedigitalhq.com';
 
 interface Topic {
@@ -20,7 +20,7 @@ const TOPICS: Topic[] = [
     id: 'start',
     title: 'Quick start',
     html: `
-      <p><b>KDP Perfect</b> gets your book ready for Amazon KDP: cover templates at the exact size, print-ready interiors
+      <p><b>SelfPublisher Studio</b> gets your book ready for Amazon KDP: cover templates at the exact size, print-ready interiors
       for low-content books, covers built from your own art, a preflight check and 3D mockups for your listing.</p>
       <h4>Making a paperback or hardcover cover</h4>
       <ol>
@@ -336,6 +336,9 @@ const TOPICS: Topic[] = [
         <li><b>Image shape</b>: square 1:1 (best for listings and square coloring books), 4:5, 2:3, 3:2 or 16:9.</li>
         <li><b>Background, finish, shadow, spine crease</b>: matte or glossy, a soft shadow, and an optional crease next
         to the spine. A transparent background keeps the shadow.</li>
+        <li><b>Photo backgrounds</b> (wood desks, linen, curtain, shelf): pick any <b>Image shape</b> and the app uses the
+        portrait or landscape version of the photo that needs the least cropping, centred, so one scene works for
+        square, 4:5, 3:4, 9:16 and 16:9 posts.</li>
         <li><b>Download</b> PNG or JPG, 1000 to 4000 px on the longest side.</li>
       </ol>
       <p class="guide-tip"><b>Tip:</b> use a transparent PNG to place the book on your own photos and graphics in Canva.</p>`,
@@ -405,7 +408,7 @@ const TOPICS: Topic[] = [
       suggest a feature on <a href="${REPO}/issues" target="_blank" rel="noopener">GitHub</a>.
       The <a href="${REPO}#readme" target="_blank" rel="noopener">project page</a> has the full documentation and the
       changelog.</p>
-      <p class="guide-small">KDP Perfect is not made by or affiliated with Amazon. KDP's rules change from time to time;
+      <p class="guide-small">SelfPublisher Studio is not made by or affiliated with Amazon. KDP's rules change from time to time;
       when in doubt, check KDP's help pages.</p>`,
   },
 ];

@@ -22,8 +22,8 @@ function printable(font: PDFFont, text: string): string {
 export async function sceneToPdf(scene: Scene, meta: { title?: string; fonts?: { display: Uint8Array; body: Uint8Array } } = {}): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   if (meta.title) doc.setTitle(meta.title);
-  doc.setProducer('KDP Perfect');
-  doc.setCreator('KDP Perfect');
+  doc.setProducer('SelfPublisher Studio');
+  doc.setCreator('SelfPublisher Studio');
 
   // The app's fonts when given (they look like the on-screen template); Helvetica otherwise.
   let regular: PDFFont;

@@ -8,8 +8,10 @@ import {
   frontAspect,
   getAspect,
   getBackground,
+  coverCrop,
   outputSize,
   pageEdgeColor,
+  pickPhoto,
   wrapRegions,
   type CoverLayout,
   type PoseId,
@@ -19,6 +21,31 @@ import type { Ctx, Screen } from '../context';
 import { $, bindFileInput, esc, rafThrottle, segment, toast } from '../dom';
 import { saveFile } from '../files';
 import type { Book3D, PanelImages } from '../mockup/book3d';
+
+/** Photo backgrounds bundled with the app, by file name. */
+const PHOTO_URLS: Record<string, string> = Object.fromEntries(
+  Object.entries(import.meta.glob('../mockup/bgs/*.jpg', { eager: true, query: '?url', import: 'default' }) as Record<string, string>).map(([k, v]) => [
+    k.split('/').pop()!.replace('.jpg', ''),
+    v,
+  ]),
+);
+
+/** The photo (and its URL) to use for a background at an aspect ratio, or null for colour backgrounds. */
+function photoFor(bgId: string, aspect: number): { url: string; w: number; h: number } | null {
+  const bg = getBackground(bgId);
+  if (!bg.photos?.length) return null;
+  const p = pickPhoto(bg.photos, aspect);
+  return { url: PHOTO_URLS[p.file] ?? '', w: p.w, h: p.h };
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not load the background photo.'));
+    img.src = url;
+  });
+}
 
 const SOURCE_HINT = {
   wrap: 'Upload your finished full-wrap cover. The back, spine and front are cut out using your book settings on the left.',
@@ -110,8 +137,9 @@ export function initMockupScreen(ctx: Ctx): Screen {
   el.pose.innerHTML = POSES.map((p) => `<button type="button" class="chip" data-v="${p.id}" title="${esc(p.hint)}">${esc(p.label)}</button>`).join('');
   el.aspect.innerHTML = ASPECTS.map((a) => `<button type="button" class="chip" data-v="${esc(a.id)}">${esc(a.label)}</button>`).join('');
   el.bg.innerHTML = BACKGROUNDS.map((b) => {
-    const css = b.from === null ? '' : `background:linear-gradient(${b.from},${b.to ?? b.from})`;
-    return `<button type="button" class="swatch${b.from === null ? ' clear' : ''}" data-v="${b.id}" title="${esc(b.label)}" aria-label="${esc(b.label)}" style="${css}"></button>`;
+    const thumb = b.photos ? PHOTO_URLS[b.photos[0]!.file] : undefined;
+    const css = thumb ? `background:url('${thumb}') center/cover` : b.from === null ? '' : `background:linear-gradient(${b.from},${b.to ?? b.from})`;
+    return `<button type="button" class="swatch${b.from === null && !thumb ? ' clear' : ''}" data-v="${b.id}" title="${esc(b.label)}" aria-label="${esc(b.label)}" style="${css}"></button>`;
   }).join('');
   el.size.innerHTML = LONG_SIDES.map((s) => `<option value="${s}">${s} px</option>`).join('');
 
@@ -132,7 +160,8 @@ export function initMockupScreen(ctx: Ctx): Screen {
   });
   chipClick(el.bg, (v) => {
     m.background = v;
-    if (getBackground(v).from === null && m.format === 'jpg') m.format = 'png';
+    const b = getBackground(v);
+    if (b.from === null && !b.photos && m.format === 'jpg') m.format = 'png';
     ctx.save();
     refresh();
   });
@@ -329,11 +358,16 @@ export function initMockupScreen(ctx: Ctx): Screen {
     const layout = ctx.layout();
     const a = getAspect(m.aspect);
     el.stage.style.setProperty('--ar', String(a.w / a.h));
+    // Photo backgrounds sit behind the transparent 3D canvas, cropped to the image shape (same crop as the export).
+    const photo = photoFor(m.background, a.w / a.h);
+    el.stage.style.backgroundImage = photo ? `url('${photo.url}')` : '';
+    el.stage.style.backgroundSize = photo ? 'cover' : '';
+    el.stage.style.backgroundPosition = photo ? 'center' : '';
 
     sourceSeg.sync();
     finishSeg.sync();
     formatSeg.sync();
-    const transparent = getBackground(m.background).from === null;
+    const transparent = getBackground(m.background).from === null && !photo;
     formatSeg.disable('jpg', transparent, 'JPG cannot be transparent');
     if (transparent && m.format === 'jpg') m.format = 'png';
     for (const b of el.pose.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.v === m.pose));
@@ -377,8 +411,22 @@ export function initMockupScreen(ctx: Ctx): Screen {
     if (!layout?.valid || !engine) return;
     const { w, h } = outputSize(m.aspect, m.longSide);
     try {
-      const blob = await engine.exportImage(w, h, m.format === 'png' ? 'image/png' : 'image/jpeg', 0.92);
-      const name = `kdp-book-mockup_${m.pose}_${m.aspect.replace(':', 'x')}_${w}x${h}.${m.format}`;
+      const mime = m.format === 'png' ? 'image/png' : 'image/jpeg';
+      const photo = photoFor(m.background, w / h);
+      let blob: Blob;
+      if (photo) {
+        // Render the book on transparent, then lay it over the cropped photo.
+        const [bookBlob, img] = await Promise.all([engine.exportImage(w, h, 'image/png'), loadImage(photo.url)]);
+        const book = await createImageBitmap(bookBlob);
+        const out = newCanvas(w, h);
+        const g = out.getContext('2d')!;
+        const c = coverCrop(img.naturalWidth, img.naturalHeight, w, h);
+        g.imageSmoothingQuality = 'high';
+        g.drawImage(img, c.x, c.y, c.w, c.h, 0, 0, w, h);
+        g.drawImage(book, 0, 0);
+        blob = await new Promise<Blob>((res, rej) => out.toBlob((b) => (b ? res(b) : rej(new Error('Image encoding failed.'))), mime, 0.92));
+      } else blob = await engine.exportImage(w, h, mime, 0.92);
+      const name = `kdp-book-mockup_${m.pose}_${m.background}_${m.aspect.replace(':', 'x')}_${w}x${h}.${m.format}`;
       const r = await saveFile(name, blob, blob.type);
       if (r.saved) toast(r.path ? `Saved ${r.path}` : 'Mockup downloaded');
     } catch (err) {

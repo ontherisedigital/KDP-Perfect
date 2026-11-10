@@ -1,12 +1,12 @@
-# Contributing to KDP Perfect
+# Contributing to SelfPublisher Studio
 
 Thanks for helping! Bug reports, spec corrections, docs fixes and features are all welcome. By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Quick start
 
 ```bash
-git clone https://github.com/ontherisedigital/KDP-Perfect.git
-cd KDP-Perfect
+git clone https://github.com/ontherisedigital/SelfPublisher-Studio.git
+cd SelfPublisher-Studio
 npm install
 npm run dev            # UI in the browser (fastest feedback)
 npm run dev:desktop    # UI inside the Electron shell

@@ -23,7 +23,7 @@ const outArg = process.argv.find((a) => a.startsWith('--out='))?.slice(6);
 const OUT = outArg ? resolve(outArg) : join(ROOT, 'marketing');
 const DIRS = { shots: join(OUT, 'Screenshots'), videos: join(OUT, 'Videos'), mockups: join(OUT, 'Mockups'), exports: join(OUT, 'Exports') };
 /** Where the app "saves" during capture. Neutral on purpose: the path shows in the "Saved ..." toast in the recordings. */
-const DL = 'C:/Users/Public/Documents/KDP Perfect';
+const DL = 'C:/Users/Public/Documents/SelfPublisher Studio';
 const PORT = 9444;
 const only = (process.argv.find((a) => a.startsWith('--only='))?.slice(7) ?? '').split(',').filter(Boolean);
 const want = (k: string) => only.length === 0 || only.includes(k);
@@ -557,7 +557,7 @@ async function newToolVideos(): Promise<void> {
   await resetApp();
   await setBook({ trim: '6x9' });
   await tab('designer');
-  await record('kdp-perfect-page-designer', async () => {
+  await record('selfpublisher-studio-page-designer', async () => {
     await sleep(1000);
     await setSelect('#dz-template', 'month');
     await sleep(1400);
@@ -576,7 +576,7 @@ async function newToolVideos(): Promise<void> {
   });
 
   await tab('puzzles');
-  await record('kdp-perfect-puzzles', async () => {
+  await record('selfpublisher-studio-puzzles', async () => {
     await sleep(800);
     await click('#pz-add [data-type="wordsearch"]');
     await sleep(1500);
@@ -654,7 +654,7 @@ async function videos(): Promise<void> {
 
   // 1) Cover template: live numbers, hardcover, units, overlay, download
   await resetApp();
-  await record('kdp-perfect-cover-template', async () => {
+  await record('selfpublisher-studio-cover-template', async () => {
     await sleep(1200);
     await typeInto('#pages', '320');
     await sleep(900);
@@ -680,7 +680,7 @@ async function videos(): Promise<void> {
   // 2) Preflight: pass, then a diagnosis
   await resetApp();
   await tab('preflight');
-  await record('kdp-perfect-preflight', async () => {
+  await record('selfpublisher-studio-preflight', async () => {
     await sleep(1000);
     await pretendClick('#pf-drop');
     await upload('pf-file', 'the-last-lantern-cover.pdf', 'application/pdf', await artToPdf(art.a, 12.7004, 9.25));
@@ -704,7 +704,7 @@ async function videos(): Promise<void> {
   await tab('mockup');
   await upload('mock-file', 'wild-garden-cover.png', 'image/png', art.b);
   await sleep(2600);
-  await record('kdp-perfect-3d-mockup', async () => {
+  await record('selfpublisher-studio-3d-mockup', async () => {
     await sleep(1200);
     const stage = await rectOf('#mock-stage');
     const c = { x: stage.x + stage.w / 2, y: stage.y + stage.h / 2 };
@@ -740,7 +740,7 @@ async function videos(): Promise<void> {
 
   // 4) Tour: every tab in ~25 seconds
   await resetApp();
-  await record('kdp-perfect-tour', async () => {
+  await record('selfpublisher-studio-tour', async () => {
     await sleep(1500);
     await click('#binding-toggle [data-v="hardcover"]');
     await sleep(1300);

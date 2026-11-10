@@ -1,6 +1,6 @@
 # Architecture
 
-KDP Perfect is a TypeScript app with a **pure core** and thin shells around it. The same code runs as an Electron desktop app and as a static web app.
+SelfPublisher Studio is a TypeScript app with a **pure core** and thin shells around it. The same code runs as an Electron desktop app and as a static web app.
 
 ```mermaid
 flowchart LR

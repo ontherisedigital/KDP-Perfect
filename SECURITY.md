@@ -8,13 +8,13 @@ Only the latest release receives security fixes while the project is pre-1.0.
 
 Please **do not open a public issue** for security problems.
 
-Use GitHub's [private vulnerability reporting](https://github.com/ontherisedigital/KDP-Perfect/security/advisories/new) (Security tab → *Report a vulnerability*). If that isn't available, contact the repository owner privately through their GitHub profile.
+Use GitHub's [private vulnerability reporting](https://github.com/ontherisedigital/SelfPublisher-Studio/security/advisories/new) (Security tab → *Report a vulnerability*). If that isn't available, contact the repository owner privately through their GitHub profile.
 
 Include the affected version, steps to reproduce, and the impact. You can expect an acknowledgement within a few days and a fix or mitigation plan as soon as practical. We're happy to credit you in the release notes unless you prefer otherwise.
 
 ## Scope and design
 
-KDP Perfect has no server, no accounts and no network access. Its attack surface is the desktop shell and the file-saving bridge:
+SelfPublisher Studio has no server, no accounts and no network access. Its attack surface is the desktop shell and the file-saving bridge:
 
 - The page runs with `contextIsolation`, `sandbox`, no Node integration and a strict Content-Security-Policy.
 - The only privileged call is `saveFile`: the main process validates the sender, restricts file names to a base name with an allow-listed extension, bounds the size, and the user picks the destination in a native dialog.

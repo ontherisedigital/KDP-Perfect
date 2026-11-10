@@ -1,11 +1,11 @@
 {
-  "name": "kdp-perfect",
-  "productName": "KDP Perfect",
+  "name": "selfpublisher-studio",
+  "productName": "SelfPublisher Studio",
   "version": "0.7.0",
   "description": "Cover templates, preflight checks and 3D mockups for Amazon KDP paperbacks, hardcovers and Kindle eBooks.",
   "private": true,
   "license": "MIT",
-  "author": "KDP Perfect contributors",
+  "author": "SelfPublisher Studio contributors",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
@@ -42,8 +42,8 @@
     "vitest": "^5.0.5"
   },
   "build": {
-    "appId": "com.kdpperfect.app",
-    "productName": "KDP Perfect",
+    "appId": "com.selfpublisherstudio.app",
+    "productName": "SelfPublisher Studio",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -78,7 +78,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ontherisedigital/KDP-Perfect.git"
+    "url": "git+https://github.com/ontherisedigital/SelfPublisher-Studio.git"
   },
   "keywords": [
     "kdp",

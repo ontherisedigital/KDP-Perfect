@@ -24,7 +24,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 640,
     show: false,
-    title: 'KDP Perfect',
+    title: 'SelfPublisher Studio',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
     autoHideMenuBar: true,
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#14151a' : '#f5f6f8',

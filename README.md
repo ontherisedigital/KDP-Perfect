@@ -1,4 +1,4 @@
-# KDP Perfect
+# SelfPublisher Studio
 
 **Cover templates, preflight checks and 3D mockups for Amazon KDP.** Enter your trim size, paper and page count and get an exact-size full-wrap cover template for paperbacks or hardcovers, a Kindle eBook cover template, a check of your finished cover against KDP's size rules, and a 3D book mockup, including a square 1:1 image.
 
@@ -8,7 +8,7 @@
 
 > **Status:** v0.7. A Page designer for planners and journals, a Puzzles tab (word search, crossword, maze, sudoku) and a built-in User Guide join the low-content interiors, covers from your own art, the cover templates, Kindle eBook covers, Preflight and 3D mockup (see the [changelog](CHANGELOG.md) and [roadmap](docs/ROADMAP.md)).
 >
-> KDP Perfect is an independent project. It is not affiliated with, endorsed by, or sponsored by Amazon. "Amazon", "KDP" and "Kindle Direct Publishing" are trademarks of Amazon.com, Inc. or its affiliates.
+> SelfPublisher Studio is an independent project. It is not affiliated with, endorsed by, or sponsored by Amazon. "Amazon", "KDP" and "Kindle Direct Publishing" are trademarks of Amazon.com, Inc. or its affiliates.
 
 ## What it does
 
@@ -25,15 +25,15 @@ Also: all KDP paperback trim sizes plus custom sizes, the five paperback papers 
 
 ### Desktop app (Windows and Linux)
 
-Download the installer, portable exe or AppImage from the [Releases](https://github.com/ontherisedigital/KDP-Perfect/releases) page, or build it yourself (below). There is no macOS build because it can't be tested; the web version runs in any browser, including Safari.
+Download the installer, portable exe or AppImage from the [Releases](https://github.com/ontherisedigital/SelfPublisher-Studio/releases) page, or build it yourself (below). There is no macOS build because it can't be tested; the web version runs in any browser, including Safari.
 
 ### Run from source
 
 Requires [Node.js](https://nodejs.org/) 20 or newer.
 
 ```bash
-git clone https://github.com/ontherisedigital/KDP-Perfect.git
-cd KDP-Perfect
+git clone https://github.com/ontherisedigital/SelfPublisher-Studio.git
+cd SelfPublisher-Studio
 npm install
 ```
 

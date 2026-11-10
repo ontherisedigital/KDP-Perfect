@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeCoverLayout } from '../src/core/cover';
-import { ASPECTS, BACKGROUNDS, LONG_SIDES, bookDims, frontAspect, getAspect, getBackground, outputSize, pageEdgeColor, wrapRegions } from '../src/core/mockup';
+import { ASPECTS, BACKGROUNDS, LONG_SIDES, bookDims, frontAspect, getAspect, coverCrop, getBackground, outputSize, pageEdgeColor, pickPhoto, wrapRegions } from '../src/core/mockup';
 
 const pb = computeCoverLayout({ trimWidth: 6, trimHeight: 9, trimId: '6x9', pageCount: 200, paper: 'bw-cream', readingDirection: 'ltr' });
 const hc = computeCoverLayout({ binding: 'hardcover', trimWidth: 6, trimHeight: 9, trimId: '6x9', pageCount: 200, paper: 'bw-white', readingDirection: 'rtl' });
@@ -71,5 +71,27 @@ describe('mockup output sizes', () => {
     expect(getAspect('nope').id).toBe('1:1');
     expect(getBackground('nope').id).toBe('studio');
     expect(BACKGROUNDS.some((b) => b.from === null)).toBe(true);
+  });
+});
+
+describe('photo backgrounds', () => {
+  const photos = [{ file: 'p', w: 1340, h: 2400 }, { file: 'l', w: 2400, h: 1340 }];
+  it('picks the version that loses the least to the crop', () => {
+    expect(pickPhoto(photos, 9 / 16).file).toBe('p');
+    expect(pickPhoto(photos, 4 / 5).file).toBe('p');
+    expect(pickPhoto(photos, 16 / 9).file).toBe('l');
+    expect(pickPhoto(photos, 3 / 2).file).toBe('l');
+  });
+  it('crops to the exact shape, centred, inside the photo', () => {
+    const c = coverCrop(1340, 2400, 1000, 1000);
+    expect(c.w).toBeCloseTo(1340);
+    expect(c.h).toBeCloseTo(1340);
+    expect(c.y).toBeCloseTo((2400 - 1340) / 2);
+    const d = coverCrop(2400, 1340, 1600, 900);
+    expect(d.w / d.h).toBeCloseTo(16 / 9);
+    expect(d.x).toBeGreaterThanOrEqual(0);
+  });
+  it('every photo scene has a bundled portrait version', () => {
+    for (const b of BACKGROUNDS.filter((x) => x.photos)) expect(b.photos!.some((p) => p.h > p.w)).toBe(true);
   });
 });

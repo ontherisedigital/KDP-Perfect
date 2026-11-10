@@ -974,7 +974,7 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
         .filter((i) => JSON.stringify(doc()).includes(i.id))
         .map((i) => [i.id, { name: i.name, type: i.type, widthPx: i.widthPx, heightPx: i.heightPx, data: btoa(Array.from(i.bytes, (b) => String.fromCharCode(b)).join('')) }]),
     );
-    const r = await saveFile('kdp-perfect-design.json', JSON.stringify({ ...doc(), images: imgs }), 'application/json');
+    const r = await saveFile('selfpublisher-studio-design.json', JSON.stringify({ ...doc(), images: imgs }), 'application/json');
     if (r.saved) toast(r.path ? `Saved ${r.path}` : 'Design file downloaded');
   });
   el.import.addEventListener('change', async () => {
@@ -999,7 +999,7 @@ export function initDesignerScreen(ctx: Ctx & { show(id: 'interior'): void }): S
       render();
       toast('Design opened');
     } catch {
-      toast('That file is not a KDP Perfect design file.');
+      toast('That file is not a SelfPublisher Studio design file.');
     }
   });
 

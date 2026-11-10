@@ -16,8 +16,8 @@ export interface StoredImage {
   url: string;
 }
 
-const DOC_KEY = 'kdp-perfect.design.v1';
-const DB_NAME = 'kdp-perfect';
+const DOC_KEY = 'selfpublisher-studio.design.v1';
+const DB_NAME = 'selfpublisher-studio';
 const STORE = 'images';
 
 let doc: DesignDoc = load();

@@ -9,7 +9,7 @@ interface Book {
   solutions: SolutionLayout;
 }
 
-const KEY = 'kdp-perfect.puzzles.v1';
+const KEY = 'selfpublisher-studio.puzzles.v1';
 let book: Book = load();
 const cache = new Map<string, { sig: string; g: Generated }>();
 const listeners = new Set<() => void>();

@@ -72,7 +72,9 @@ export interface Aspect {
 export const ASPECTS: readonly Aspect[] = [
   { id: '1:1', label: 'Square 1:1', w: 1, h: 1 },
   { id: '4:5', label: 'Portrait 4:5', w: 4, h: 5 },
+  { id: '3:4', label: 'Portrait 3:4', w: 3, h: 4 },
   { id: '2:3', label: 'Tall 2:3', w: 2, h: 3 },
+  { id: '9:16', label: 'Story 9:16', w: 9, h: 16 },
   { id: '3:2', label: 'Landscape 3:2', w: 3, h: 2 },
   { id: '16:9', label: 'Wide 16:9', w: 16, h: 9 },
 ];
@@ -106,9 +108,11 @@ export const POSES: readonly { id: PoseId; label: string; hint: string }[] = [
 export interface BackgroundPreset {
   id: string;
   label: string;
-  /** `null` = transparent. */
+  /** `null` = transparent (also used under photo backgrounds, which are drawn behind the book). */
   from: string | null;
   to?: string;
+  /** Photo scene: one or more versions of the same scene in different shapes. */
+  photos?: readonly { file: string; w: number; h: number }[];
 }
 
 export const BACKGROUNDS: readonly BackgroundPreset[] = [
@@ -119,7 +123,26 @@ export const BACKGROUNDS: readonly BackgroundPreset[] = [
   { id: 'blush', label: 'Blush', from: '#FCEBEE', to: '#F3C9D1' },
   { id: 'night', label: 'Night', from: '#2B2E3B', to: '#14151C' },
   { id: 'clear', label: 'Transparent', from: null },
+  { id: 'wood-light', label: 'Light wood desk', from: null, photos: [{ file: 'wood-light-portrait', w: 1340, h: 2400 }, { file: 'wood-light-landscape', w: 2400, h: 1340 }] },
+  { id: 'wood-dark', label: 'Dark wood desk', from: null, photos: [{ file: 'wood-dark-portrait', w: 1340, h: 2400 }, { file: 'wood-dark-landscape', w: 2400, h: 1340 }] },
+  { id: 'linen', label: 'White linen', from: null, photos: [{ file: 'linen-portrait', w: 1340, h: 2400 }, { file: 'linen-landscape', w: 2400, h: 1340 }] },
+  { id: 'curtain', label: 'Sheer curtain', from: null, photos: [{ file: 'curtain-portrait', w: 1340, h: 2400 }] },
+  { id: 'shelf', label: 'Shelf and curtain', from: null, photos: [{ file: 'shelf-portrait', w: 1340, h: 2400 }] },
 ];
+
+/** The version of a photo scene that loses the least when cropped to `aspect` (w / h). */
+export function pickPhoto<T extends { w: number; h: number }>(photos: readonly T[], aspect: number): T {
+  const kept = (p: T) => Math.min(p.w / p.h, aspect) / Math.max(p.w / p.h, aspect);
+  return photos.reduce((best, p) => (kept(p) > kept(best) ? p : best));
+}
+
+/** The centred source rectangle that fills a `dstW` x `dstH` image from a `srcW` x `srcH` photo (CSS "cover"). */
+export function coverCrop(srcW: number, srcH: number, dstW: number, dstH: number): { x: number; y: number; w: number; h: number } {
+  const k = Math.min(srcW / dstW, srcH / dstH);
+  const w = dstW * k;
+  const h = dstH * k;
+  return { x: (srcW - w) / 2, y: (srcH - h) / 2, w, h };
+}
 
 export function getBackground(id: string): BackgroundPreset {
   return BACKGROUNDS.find((b) => b.id === id) ?? BACKGROUNDS[0]!;

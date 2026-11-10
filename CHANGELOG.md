@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- Renamed the app from KDP Perfect to **SelfPublisher Studio** (window title, installer, app ID, PDF metadata, docs).
+
+### Added
+- Photo backgrounds for the 3D mockup (light and dark wood desks, white linen, sheer curtain, shelf). Each is cropped to the chosen image shape using whichever portrait or landscape version loses the least.
+- Portrait 3:4 and Story 9:16 mockup shapes.
+
 ## [0.7.0] - 2026-11-09
 
 ### Changed
@@ -93,12 +100,12 @@ First release: the cover template generator.
 - Interior margin helpers (`src/core/interior.ts`) as groundwork for the planned interior formatter.
 - Test suite with golden values extracted from Amazon's KDP Print File Setup Calculator V5, plus an end-to-end desktop smoke test.
 
-[Unreleased]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.7.0...HEAD
-[0.7.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.1...v0.3.0
-[0.2.1]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/ontherisedigital/KDP-Perfect/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/ontherisedigital/KDP-Perfect/releases/tag/v0.1.0
+[Unreleased]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/ontherisedigital/SelfPublisher-Studio/releases/tag/v0.1.0

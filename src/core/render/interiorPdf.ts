@@ -46,8 +46,8 @@ async function newDoc(title: string): Promise<PDFDocument> {
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   doc.setTitle(title);
-  doc.setProducer('KDP Perfect');
-  doc.setCreator('KDP Perfect');
+  doc.setProducer('SelfPublisher Studio');
+  doc.setCreator('SelfPublisher Studio');
   return doc;
 }
 

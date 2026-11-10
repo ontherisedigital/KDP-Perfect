@@ -120,7 +120,7 @@ export const DEFAULT_STATE: AppState = {
   },
 };
 
-const KEY = 'kdp-perfect.v2';
+const KEY = 'selfpublisher-studio.v2';
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isRec = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;

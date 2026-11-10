@@ -5,7 +5,7 @@
 // PDF, which also proves pdf.js and its worker run under file:// and the CSP), and the 3D mockup (WebGL + PNG export).
 //
 //   npm run smoke                                   (builds first, tests `electron .`)
-//   node scripts/smoke-desktop.mjs --exe "release/win-unpacked/KDP Perfect.exe"   (tests a packaged build)
+//   node scripts/smoke-desktop.mjs --exe "release/win-unpacked/SelfPublisher Studio.exe"   (tests a packaged build)
 //
 // The main process writes straight into KDP_SMOKE_DIR instead of opening a Save As dialog when that variable is set.
 import { spawn } from 'node:child_process';
@@ -21,7 +21,7 @@ const PORT = 9333;
 const out = mkdtempSync(join(tmpdir(), 'kdp-smoke-out-'));
 const profile = mkdtempSync(join(tmpdir(), 'kdp-smoke-profile-'));
 
-// `--exe <path>` tests a packaged build (e.g. release/win-unpacked/KDP Perfect.exe) instead of `electron .`
+// `--exe <path>` tests a packaged build (e.g. release/win-unpacked/SelfPublisher Studio.exe) instead of `electron .`
 const exeIdx = process.argv.indexOf('--exe');
 const exe = exeIdx > -1 ? process.argv[exeIdx + 1] : undefined;
 const flags = [`--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`];
@@ -97,7 +97,7 @@ try {
   };
 
   await sleep(800);
-  check((await evaluate('document.title')) === 'KDP Perfect', 'window title');
+  check((await evaluate('document.title')) === 'SelfPublisher Studio', 'window title');
   check((await evaluate('typeof window.kdpDesktop?.saveFile')) === 'function', 'desktop bridge exposed to the page');
   check((await evaluate('typeof require + typeof process')) === 'undefinedundefined', 'Node is not exposed to the page');
   const canvas = await evaluate("document.getElementById('canvas-primary').textContent");
