@@ -61,10 +61,10 @@ describe('scene', () => {
       .map((p) => p.text);
     expect(texts).toContain('13.0825" x 9.25"');
     expect(texts).toContain('3925 x 2775 px at 300 DPI');
-    expect(texts).toContain('FRONT COVER');
-    expect(texts).toContain('BACK COVER');
+    expect(texts).toContain('Front cover');
+    expect(texts).toContain('Back cover');
     expect(texts.some((t) => t.startsWith('SPINE TEXT ZONE'))).toBe(true);
-    expect(texts).toContain('BARCODE AREA');
+    expect(texts).toContain('Barcode area');
   });
 
   it('marks books under 79 pages as having no spine text', () => {
@@ -90,7 +90,7 @@ describe('scene', () => {
       for (const p of scene.items) {
         if (p.kind !== 'text' || p.rotate) continue;
         const inBack = p.x > backBox.x && p.x < backBox.x + backBox.w;
-        const isBarcodeCaption = p.text.includes('BARCODE') || p.text.includes('keep clear');
+        const isBarcodeCaption = p.text.includes('Barcode') || p.text.includes('keep clear');
         if (inBack && !isBarcodeCaption) expect(p.y, `${t.id}: "${p.text}"`).toBeLessThan(layout.barcode.y);
       }
     }

@@ -2,7 +2,8 @@ import type { Scene } from '../scene';
 import { toPixels } from '../units';
 import { setJpegDpi, setPngDpi } from './raster-meta';
 
-const FONT = 'Helvetica, Arial, sans-serif';
+const FONT = 'Dosis, Helvetica, Arial, sans-serif';
+const DISPLAY = 'Fredoka, Helvetica, Arial, sans-serif';
 
 /** Draw a scene onto a 2D context at `scale` pixels per inch. */
 export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene, scale: number): void {
@@ -18,12 +19,20 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene, scale: nu
         if (p.fill) {
           ctx.globalAlpha = p.fillOpacity ?? 1;
           ctx.fillStyle = p.fill;
-          ctx.fillRect(p.x * scale, p.y * scale, p.w * scale, p.h * scale);
+          if (p.r) {
+            ctx.beginPath();
+            ctx.roundRect(p.x * scale, p.y * scale, p.w * scale, p.h * scale, p.r * scale);
+            ctx.fill();
+          } else ctx.fillRect(p.x * scale, p.y * scale, p.w * scale, p.h * scale);
           ctx.globalAlpha = 1;
         }
         if (p.stroke) {
           applyStroke(ctx, p.stroke, p.strokeWidth ?? 0.01, p.dash, scale);
-          ctx.strokeRect(p.x * scale, p.y * scale, p.w * scale, p.h * scale);
+          if (p.r) {
+            ctx.beginPath();
+            ctx.roundRect(p.x * scale, p.y * scale, p.w * scale, p.h * scale, p.r * scale);
+            ctx.stroke();
+          } else ctx.strokeRect(p.x * scale, p.y * scale, p.w * scale, p.h * scale);
         }
         break;
       }
@@ -37,7 +46,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene, scale: nu
       }
       case 'text': {
         ctx.fillStyle = p.fill;
-        ctx.font = `${p.bold ? 'bold ' : ''}${p.size * scale}px ${FONT}`;
+        ctx.font = `${p.bold ? 600 : 500} ${p.size * scale}px ${p.font === 'display' ? DISPLAY : FONT}`;
         ctx.textAlign = p.anchor === 'middle' ? 'center' : p.anchor === 'end' ? 'right' : 'left';
         ctx.textBaseline = 'alphabetic';
         ctx.translate(p.x * scale, p.y * scale);
@@ -88,6 +97,10 @@ export async function sceneToRaster(scene: Scene, dpi: number, format: RasterFor
   }
   const width = toPixels(scene.width, dpi);
   const height = toPixels(scene.height, dpi);
+  // Make sure the template fonts are ready, or the first export falls back to a system font.
+  if (typeof document !== 'undefined' && document.fonts) {
+    await Promise.all([document.fonts.load('600 24px Fredoka'), document.fonts.load('500 24px Dosis'), document.fonts.load('600 24px Dosis')]).catch(() => undefined);
+  }
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;

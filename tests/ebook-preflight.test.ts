@@ -5,7 +5,7 @@ import { computeCoverLayout, type CoverInput } from '../src/core/cover';
 import { detectKind, diagnoseSize, readDeclaredDpi, readFileFacts, runPreflight, type FileFacts } from '../src/core/preflight';
 import { readJpegDpi, readPngDpi, setJpegDpi, setPngDpi } from '../src/core/render/raster-meta';
 import { sceneToPdf } from '../src/core/render/pdf';
-import { buildCoverScene } from '../src/core/scene';
+import { COLORS, buildCoverScene } from '../src/core/scene';
 import { sceneToSvg } from '../src/core/render/svg';
 
 describe('eBook cover', () => {
@@ -205,7 +205,7 @@ describe('hardcover scene', () => {
     expect(texts.some((t) => /Hinge: no text/.test(t))).toBe(true);
     expect(texts.some((t) => t.startsWith('board 6.1969'))).toBe(true);
     // teal hinge bands exist
-    expect(scene.items.filter((p) => p.kind === 'rect' && p.fill === '#12A594' && p.fillOpacity === 0.22)).toHaveLength(2);
+    expect(scene.items.filter((p) => p.kind === 'rect' && p.fill === COLORS.hinge && p.fillOpacity === 0.22)).toHaveLength(2);
     expect(sceneToSvg(scene)).toContain('width="14.21418in"');
   });
 });

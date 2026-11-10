@@ -39,8 +39,8 @@ h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: 
   border-bottom: 1px solid var(--glass-border);
 }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--accent); }
-.brand-mark { width: 30px; height: 30px; }
-.brand-name { font-family: var(--display); font-size: 1.3rem; font-weight: 800; color: var(--ink); }
+.brand-mark { width: 34px; height: 34px; border-radius: 9px; box-shadow: 0 4px 12px -4px rgba(20,30,70,.4); }
+.brand-name { white-space: nowrap; font-family: var(--display); font-size: 1.3rem; font-weight: 800; color: var(--ink); }
 .brand-name b { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .tabs {
   position: relative; display: inline-flex; gap: 2px; padding: 5px; border-radius: 999px;

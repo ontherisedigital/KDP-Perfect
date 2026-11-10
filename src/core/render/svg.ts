@@ -1,6 +1,7 @@
 import type { Primitive, Scene } from '../scene';
 
-const FONT = 'Helvetica, Arial, sans-serif';
+const FONT = "Dosis, Helvetica, Arial, sans-serif";
+const DISPLAY = "Fredoka, Helvetica, Arial, sans-serif";
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -20,15 +21,17 @@ function primitive(p: Primitive): string {
       const fill = p.fill
         ? ` fill="${p.fill}"${p.fillOpacity !== undefined ? ` fill-opacity="${n(p.fillOpacity)}"` : ''}`
         : ' fill="none"';
-      return `<rect x="${n(p.x)}" y="${n(p.y)}" width="${n(p.w)}" height="${n(p.h)}"${fill}${stroke(p)}/>`;
+      const rx = p.r ? ` rx="${n(p.r)}"` : '';
+      return `<rect x="${n(p.x)}" y="${n(p.y)}" width="${n(p.w)}" height="${n(p.h)}"${rx}${fill}${stroke(p)}/>`;
     }
     case 'line':
       return `<line x1="${n(p.x1)}" y1="${n(p.y1)}" x2="${n(p.x2)}" y2="${n(p.y2)}"${stroke(p)}/>`;
     case 'text': {
       const anchor = p.anchor === 'middle' ? ' text-anchor="middle"' : p.anchor === 'end' ? ' text-anchor="end"' : '';
-      const weight = p.bold ? ' font-weight="bold"' : '';
+      const weight = p.bold ? ' font-weight="600"' : ' font-weight="500"';
+      const family = p.font === 'display' ? ` font-family="${DISPLAY}"` : '';
       const rotate = p.rotate ? ` transform="rotate(${n(p.rotate)} ${n(p.x)} ${n(p.y)})"` : '';
-      return `<text x="${n(p.x)}" y="${n(p.y)}" font-size="${n(p.size)}" fill="${p.fill}"${anchor}${weight}${rotate}>${esc(p.text)}</text>`;
+      return `<text x="${n(p.x)}" y="${n(p.y)}" font-size="${n(p.size)}" fill="${p.fill}"${anchor}${weight}${family}${rotate}>${esc(p.text)}</text>`;
     }
   }
 }

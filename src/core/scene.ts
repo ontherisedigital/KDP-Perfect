@@ -24,6 +24,8 @@ export type Primitive =
       stroke?: string;
       strokeWidth?: number;
       dash?: Dash;
+      /** Corner radius, inches (labels and cards only; guides stay square and exact). */
+      r?: number;
     }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; stroke: string; strokeWidth: number; dash?: Dash }
   | {
@@ -36,6 +38,8 @@ export type Primitive =
       fill: string;
       anchor: 'start' | 'middle' | 'end';
       bold?: boolean;
+      /** `display` (rounded headings) or `body` (default). */
+      font?: 'display' | 'body';
       /** Degrees clockwise about (x, y). */
       rotate?: number;
     };
@@ -63,18 +67,22 @@ export interface SceneOptions {
 
 // --- Palette ---------------------------------------------------------------------------------
 
+// Matches the app's liquid-glass theme: soft, saturated accents on white.
 export const COLORS = {
-  bleed: '#E5484D',
-  variance: '#F5A524',
-  hinge: '#12A594',
-  safe: '#1F9D68',
-  spineText: '#2F6FED',
-  trim: '#1A1A1A',
-  fold: '#8E4EC6',
-  barcode: '#4B4B4B',
-  label: '#3A3A3A',
-  muted: '#7A7A7A',
-  page: '#FFFFFF',
+  bleed: '#FF5C7A',
+  variance: '#1CB6E7',
+  hinge: '#2EC4B6',
+  safe: '#1FB37A',
+  spineText: '#4F7CFF',
+  trim: '#1E2235',
+  fold: '#8B5CF6',
+  barcode: '#5B6275',
+  label: '#2A2F45',
+  muted: '#8A90A6',
+  title: '#6C7BFF',
+  card: '#FFFFFF',
+  cardLine: '#DCE2F2',
+  page: '#D3EBF3',
 } as const;
 
 const DASH: Dash = [0.07, 0.045];
@@ -118,18 +126,18 @@ export function buildCoverScene(layout: CoverLayout, options: SceneOptions): Sce
 
   // 1. Outer ring: bleed (trimmed off) or wrap (folds around the board).
   const canvasRect: Rect = { x: 0, y: 0, w: canvas.w, h: canvas.h };
-  frame(canvasRect, trim).forEach((r) => fillRect(r, COLORS.bleed, 0.3 * tint));
+  frame(canvasRect, trim).forEach((r) => fillRect(r, COLORS.bleed, 0.24 * tint));
 
   // 2. Variance / margin bands: inside the trim line but outside the safe boxes.
-  frame(back, layout.marginRects.back).forEach((r) => fillRect(r, COLORS.variance, 0.3 * tint));
-  frame(front, layout.marginRects.front).forEach((r) => fillRect(r, COLORS.variance, 0.3 * tint));
-  if (safe.spineText) frame(spine, safe.spineText).forEach((r) => fillRect(r, COLORS.variance, 0.3 * tint));
-  else fillRect(spine, COLORS.variance, 0.3 * tint); // no spine text allowed: keep the whole spine clear
+  frame(back, layout.marginRects.back).forEach((r) => fillRect(r, COLORS.variance, 0.24 * tint));
+  frame(front, layout.marginRects.front).forEach((r) => fillRect(r, COLORS.variance, 0.24 * tint));
+  if (safe.spineText) frame(spine, safe.spineText).forEach((r) => fillRect(r, COLORS.variance, 0.24 * tint));
+  else fillRect(spine, COLORS.variance, 0.24 * tint); // no spine text allowed: keep the whole spine clear
   for (const band of layout.hingeBands) fillRect(band, COLORS.hinge, 0.22 * tint);
 
   // 3. Safe areas (light tint + dashed outline).
   for (const r of [safe.back, safe.front]) {
-    if (template) fillRect(r, COLORS.safe, 0.06);
+    if (template) fillRect(r, COLORS.safe, 0.045);
     items.push({ kind: 'rect', x: r.x, y: r.y, w: r.w, h: r.h, stroke: COLORS.safe, strokeWidth: LINE, dash: DASH });
   }
   if (safe.spineText) {
@@ -146,11 +154,12 @@ export function buildCoverScene(layout: CoverLayout, options: SceneOptions): Sce
     y: bc.y,
     w: bc.w,
     h: bc.h,
-    fill: COLORS.page,
-    fillOpacity: template ? 0.9 : 0.55,
+    fill: COLORS.card,
+    fillOpacity: template ? 0.95 : 0.55,
     stroke: COLORS.barcode,
     strokeWidth: LINE,
     dash: DASH,
+    r: Math.min(0.08, bc.h / 6),
   });
 
   // 5. Trim line / board edge (outer) and spine folds / edges.
@@ -175,16 +184,16 @@ function addLabels(items: Primitive[], layout: CoverLayout, options: SceneOption
 
   // Panel names, centered high in each safe box.
   const panelTitle = (safeBox: Rect, name: string, sub: string) => {
-    const size = fitSize(name, safeBox.w * 0.8, 0.5, 0.18, true);
+    const size = fitSize(name, safeBox.w * 0.8, 0.46, 0.18, true);
     const y = safeBox.y + 0.25 + size;
-    items.push({ kind: 'text', x: cx(safeBox), y, text: name, size, fill: COLORS.muted, anchor: 'middle', bold: true });
+    items.push({ kind: 'text', x: cx(safeBox), y, text: name, size, fill: COLORS.title, anchor: 'middle', bold: true, font: 'display' });
     const subSize = fitSize(sub, safeBox.w * 0.85, 0.16, 0.09);
     items.push({ kind: 'text', x: cx(safeBox), y: y + subSize * 1.7, text: sub, size: subSize, fill: COLORS.muted, anchor: 'middle' });
     return y + subSize * 1.7;
   };
   const sub = hardcover ? `board ${panelSize}` : `trim ${trimSize}`;
-  panelTitle(safe.front, 'FRONT COVER', sub);
-  const backBottom = panelTitle(safe.back, 'BACK COVER', sub);
+  panelTitle(safe.front, 'Front cover', sub);
+  const backBottom = panelTitle(safe.back, 'Back cover', sub);
 
   // Dimension block on the back cover. This is what you type into your design tool.
   const wPx = toPixels(canvas.w, options.dpi);
@@ -216,14 +225,25 @@ function addLabels(items: Primitive[], layout: CoverLayout, options: SceneOption
   const longest = lines.reduce((a, l) => (l.text.length * l.scale > a.text.length * a.scale ? l : a), lines[0]!);
   const maxW = safe.back.w - 0.4;
   const base = fitSize(longest.text, maxW, 0.17 / longest.scale, 0.07 / longest.scale, longest.bold);
-  let y = backBottom + 0.3;
   const x = cx(safe.back);
-  const limit = barcode.y - 0.15;
+  const limit = barcode.y - 0.25;
+  const top = backBottom + 0.25;
+  // Lay the lines out first so they can sit on a rounded card.
+  const placed: { l: (typeof lines)[number]; y: number; size: number }[] = [];
+  let y = top + 0.14;
   for (const l of lines) {
     const size = base * l.scale;
     y += size * 1.45;
     if (y > limit) break; // never run into the barcode box
-    items.push({ kind: 'text', x, y, text: l.text, size, fill: l.fill ?? COLORS.label, anchor: 'middle', bold: l.bold });
+    placed.push({ l, y, size });
+  }
+  if (placed.length) {
+    const cardW = Math.min(safe.back.w - 0.1, Math.max(...placed.map((p) => estimateTextWidth(p.l.text, p.size, p.l.bold))) + 0.5);
+    const cardH = placed[placed.length - 1]!.y - top + 0.2;
+    items.push({ kind: 'rect', x: x - cardW / 2, y: top, w: cardW, h: cardH, fill: COLORS.card, fillOpacity: 0.92, stroke: COLORS.cardLine, strokeWidth: 0.01, r: 0.14 });
+  }
+  for (const { l, y: ly, size } of placed) {
+    items.push({ kind: 'text', x, y: ly, text: l.text, size, fill: l.fill ?? COLORS.label, anchor: 'middle', bold: l.bold, font: l.bold ? 'display' : 'body' });
   }
 
   // Barcode caption.
@@ -232,11 +252,12 @@ function addLabels(items: Primitive[], layout: CoverLayout, options: SceneOption
     kind: 'text',
     x: cx(barcode),
     y: cy(barcode) - bcSize * 0.2,
-    text: 'BARCODE AREA',
-    size: bcSize * 1.2,
+    text: 'Barcode area',
+    size: bcSize * 1.25,
     fill: COLORS.barcode,
     anchor: 'middle',
     bold: true,
+    font: 'display',
   });
   items.push({
     kind: 'text',
@@ -274,6 +295,7 @@ function addSpineLabel(items: Primitive[], layout: CoverLayout): void {
     fill: layout.spineTextAllowed ? COLORS.spineText : COLORS.muted,
     anchor: 'middle',
     bold: true,
+    font: 'display',
     rotate: 90,
   });
 }
@@ -304,11 +326,14 @@ function addLegend(items: Primitive[], layout: CoverLayout): void {
   const longest = Math.max(...entries.map((e) => e.label.length));
   const size = fitSize('x'.repeat(longest), box.w - 0.7, 0.13, 0.065);
   const rowH = size * 1.7;
-  let y = box.y + box.h - 0.2 - rowH * (entries.length - 1);
-  const x0 = box.x + 0.25;
+  let y = box.y + box.h - 0.28 - rowH * (entries.length - 1);
+  const x0 = box.x + 0.3;
+  const cardW = Math.min(box.w - 0.1, 0.55 + estimateTextWidth('x'.repeat(longest), size) + 0.2);
+  const cardTop = y - size - 0.14;
+  items.push({ kind: 'rect', x: box.x + 0.12, y: cardTop, w: cardW, h: box.y + box.h - 0.1 - cardTop, fill: COLORS.card, fillOpacity: 0.92, stroke: COLORS.cardLine, strokeWidth: 0.01, r: 0.12 });
   for (const e of entries) {
     if (e.swatch === 'fill') {
-      items.push({ kind: 'rect', x: x0, y: y - size * 0.85, w: 0.3, h: size, fill: e.color, fillOpacity: 0.45, stroke: e.color, strokeWidth: 0.006 });
+      items.push({ kind: 'rect', x: x0, y: y - size * 0.85, w: 0.3, h: size, fill: e.color, fillOpacity: 0.5, stroke: e.color, strokeWidth: 0.006, r: size / 2 });
     } else {
       items.push({ kind: 'line', x1: x0, y1: y - size * 0.35, x2: x0 + 0.3, y2: y - size * 0.35, stroke: e.color, strokeWidth: LINE * 1.3, dash: [0.06, 0.035] });
     }

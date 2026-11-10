@@ -19,6 +19,7 @@ import {
   type Unit,
 } from '../../core';
 import type { Ctx, Screen } from '../context';
+import { loadFonts } from '../media';
 import { $, esc, segment, times, toast } from '../dom';
 import { copyText, isDesktop, saveFile } from '../files';
 import type { Dpi } from '../state';
@@ -167,7 +168,8 @@ export function initCoverScreen(ctx: Ctx): Screen {
       const scene = buildCoverScene(l, { mode: state.variant, dpi: state.dpi });
       const name = exportFileName(l, state.variant, state.format);
       if (state.format === 'pdf') {
-        const bytes = await sceneToPdf(scene, { title: `KDP ${l.binding} cover template ${formatSize(l.canvas.w, l.canvas.h, 'in')}` });
+        const fonts = await loadFonts();
+        const bytes = await sceneToPdf(scene, { title: `KDP ${l.binding} cover template ${formatSize(l.canvas.w, l.canvas.h, 'in')}`, fonts });
         return saveFile(name, bytes, 'application/pdf');
       }
       const img = await sceneToRaster(scene, state.dpi, state.format);

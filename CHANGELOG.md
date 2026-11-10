@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- New app icon (installer, window, taskbar) and logo in the top bar.
+- Prettier cover template to match the app: softer theme colours, Fredoka and Dosis lettering, and the size details, colour key and barcode box on rounded cards. Guides stay square and exact. PDF templates embed the app's fonts.
+
 ## [0.6.0] - 2026-11-08
 
 ### Added
