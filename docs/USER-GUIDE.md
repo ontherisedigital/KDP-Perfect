@@ -70,6 +70,26 @@ An eBook cover is one front image sized in **pixels**: no spine, back cover or b
 
 Preflight cannot check embedded fonts, color mode, transparency, the resolution of images *inside* a PDF, or whether text sits in the safe zone. Those are listed under **What this doesn't check**. KDP publishes no size tolerance; this app treats ±0.005" as an exact match and ±0.03" as "close".
 
+### Interior preflight
+
+Switch Preflight to **Interior** and choose your interior PDF (the book's binding, trim size and paper must be set; the page count can be blank). It checks:
+
+- **Page size and bleed**: the trim size (no bleed) or 0.125" wider and 0.25" taller (bleed), and that every page is the same size.
+- **Page count**: within KDP's limits, and whether it matches the cover. **Set the book to … pages** updates the cover template.
+- **Margins**: anything printed within 0.25" (no bleed) or 0.375" (bleed) of the outside, top and bottom edges, or inside the gutter, which grows with the page count. With bleed, art may run off the edge, but text should stay out of the margins.
+- **Fonts**: all embedded.
+- **Image resolution**: the printed resolution of every placed image; KDP asks for 300 DPI.
+
+Up to 300 pages are measured.
+
+## ISBN barcode
+
+On the **Cover template** tab, enter your ISBN (10 or 13 digits) and optionally a price add-on (`14.99`, or `90000` for no price). Download it as PDF, PNG (300 DPI) or SVG and place it inside the barcode area. 85% is the usual size for books. With a free KDP ISBN, or an empty barcode area, KDP prints the barcode itself.
+
+## Book projects
+
+The **Projects** button saves everything for one book: Your book, every tab's settings, the Page designer pages and the puzzles. Save, open, rename, start a new book, or export a project file (with its Page designer images) for backup or another computer. Uploaded covers and coloring pages are not kept in a project.
+
 ## 3D mockup
 
 1. **Artwork.** Choose **Full wrap cover** and upload your finished cover; the back, spine and front are cut out using your book settings. Or choose **Front cover only**, upload the front, and pick a spine and back colour (or upload a back cover). With nothing uploaded, the cover template is used as a placeholder.

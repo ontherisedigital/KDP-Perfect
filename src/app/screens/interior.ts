@@ -17,6 +17,8 @@ import {
   interiorFileName,
   pageLimits,
   planInterior,
+  pageNumberY,
+  ruledBox,
   styleMarks,
   toPixels,
   trimBox,
@@ -382,7 +384,7 @@ export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void; show(
         break;
       }
       case 'ruled':
-        body = styleMarks(page.style, box, page.dateLine)
+        body = styleMarks(page.style, ruledBox(box, s.pageNumbers), page.dateLine)
           .map((m) =>
             m.kind === 'dot'
               ? `<circle cx="${m.x1 * PX}" cy="${m.y1 * PX}" r="${Math.max(0.6, (m.weight * PX) / 2)}" fill="rgb(${m.grey * 255},${m.grey * 255},${m.grey * 255})"/>`
@@ -391,7 +393,7 @@ export function initInteriorScreen(ctx: Ctx & { setPages(n: number): void; show(
           .join('');
         if (page.dateLine) body += `<text x="${(box.x + box.w - 2) * PX - 6}" y="${(box.y + 0.3) * PX - 2}" font-size="9" text-anchor="end" fill="#666">Date</text>`;
         if (s.pageNumbers) {
-          const y = (box.y + box.h + Math.min(0.18, l.margins.bottom / 2)) * PX;
+          const y = pageNumberY(box) * PX;
           body += `<text x="${(page.n % 2 ? box.x + box.w : box.x) * PX}" y="${y}" font-size="8" text-anchor="${page.n % 2 ? 'end' : 'start'}" fill="#555">${page.n}</text>`;
         }
         break;

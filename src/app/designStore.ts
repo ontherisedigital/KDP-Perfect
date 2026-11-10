@@ -16,7 +16,7 @@ export interface StoredImage {
   url: string;
 }
 
-const DOC_KEY = 'selfpublisher-studio.design.v1';
+export const DOC_KEY = 'selfpublisher-studio.design.v1';
 const DB_NAME = 'selfpublisher-studio';
 const STORE = 'images';
 
@@ -122,4 +122,15 @@ export async function removeImage(id: string): Promise<void> {
     // ignore
   }
   for (const l of listeners) l();
+}
+
+/** Put an image back under its own id (opening a project file). Does nothing if it is already here. */
+export async function restoreImage(row: Omit<StoredImage, 'url'>): Promise<void> {
+  if (images.has(row.id)) return;
+  images.set(row.id, { ...row, url: URL.createObjectURL(blobOf(row)) });
+  try {
+    await tx('readwrite', (st) => st.put(row));
+  } catch {
+    // not persisted
+  }
 }

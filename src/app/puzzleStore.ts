@@ -9,7 +9,8 @@ interface Book {
   solutions: SolutionLayout;
 }
 
-const KEY = 'selfpublisher-studio.puzzles.v1';
+export const PUZZLES_KEY = 'selfpublisher-studio.puzzles.v1';
+const KEY = PUZZLES_KEY;
 let book: Book = load();
 const cache = new Map<string, { sig: string; g: Generated }>();
 const listeners = new Set<() => void>();

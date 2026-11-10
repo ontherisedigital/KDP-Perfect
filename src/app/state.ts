@@ -120,7 +120,8 @@ export const DEFAULT_STATE: AppState = {
   },
 };
 
-const KEY = 'selfpublisher-studio.v2';
+export const STATE_KEY = 'selfpublisher-studio.v2';
+const KEY = STATE_KEY;
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isRec = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;

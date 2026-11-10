@@ -69,5 +69,5 @@ export function buildEbookScene(layout: EbookLayout, options: SceneOptions): Sce
     text(cap2, h - m - cs * 2.6, cs, COLORS.safe);
   }
 
-  return { width: w, height: h, background: template ? COLORS.page : null, items };
+  return { width: w, height: h, background: template ? '#FFFFFF' : null, items };
 }

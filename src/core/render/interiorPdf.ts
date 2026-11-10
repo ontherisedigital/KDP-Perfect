@@ -9,7 +9,7 @@
 import fontkit from '@pdf-lib/fontkit';
 import { PDFDocument, clip as clipOp, degrees, endPath, grayscale, LineCapStyle, popGraphicsState, pushGraphicsState, rectangle, rgb, type PDFEmbeddedPage, type PDFFont, type PDFImage, type PDFPage } from 'pdf-lib';
 import type { CoverLayout, Rect } from '../cover';
-import { contentBox, styleMarks, trimBox, type InteriorPlan } from '../lowcontent';
+import { contentBox, pageNumberY, ruledBox, styleMarks, trimBox, type InteriorPlan } from '../lowcontent';
 import { PT_PER_INCH } from '../units';
 import { drawPrimsPdf } from '../design/render';
 import type { Prim } from '../design/prims';
@@ -124,12 +124,12 @@ export async function buildInteriorPdf(plan: InteriorPlan, images: PdfImage[], f
       }
       case 'ruled': {
         // Every ruled page of one style and side is identical, so draw it once and reuse it (smaller, faster PDF).
-        const key = `${pp.style}|${pp.n % 2}|${pp.dateLine}`;
+        const key = `${pp.style}|${pp.n % 2}|${pp.dateLine}|${input.pageNumbers}`;
         let tpl = templates.get(key);
         if (!tpl) {
           const src = await PDFDocument.create();
           const tp = src.addPage([W, H]);
-          for (const m of styleMarks(pp.style, box, pp.dateLine)) {
+          for (const m of styleMarks(pp.style, ruledBox(box, input.pageNumbers), pp.dateLine)) {
             tp.drawLine({
               start: { x: P(m.x1), y: Y(m.y1) },
               end: { x: P(m.x2), y: Y(m.y2) },
@@ -196,7 +196,7 @@ export async function buildInteriorPdf(plan: InteriorPlan, images: PdfImage[], f
       const t = String(pp.n);
       const size = 8;
       const w = body.widthOfTextAtSize(t, size);
-      const y = box.y + box.h + Math.min(0.18, l.margins.bottom / 2);
+      const y = pageNumberY(box); // inside the margins: KDP rejects text in them
       // Outside corner: right on right-hand pages, left on left-hand pages.
       const x = pp.n % 2 === 1 ? P(box.x + box.w) - w : P(box.x);
       page.drawText(t, { x, y: Y(y), size, font: body, color: grayscale(0.35) });

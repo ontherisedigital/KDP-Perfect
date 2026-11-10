@@ -305,6 +305,19 @@ export interface Mark {
 export const DATE_LINE_SPACE = 0.45;
 
 /** Lines and dots for one generated page, inside `box`. */
+/** Height kept free at the bottom of a ruled page for its page number, inside the margins as KDP requires. */
+export const PAGE_NUMBER_BAND = 0.25;
+
+/** The area the lines fill, leaving room for the page number when there is one. */
+export function ruledBox(box: Box, pageNumbers: boolean): Box {
+  return pageNumbers ? { ...box, h: box.h - PAGE_NUMBER_BAND } : box;
+}
+
+/** Baseline of the page number: inside the bottom of the content box. */
+export function pageNumberY(box: Box): number {
+  return box.y + box.h - 0.06;
+}
+
 export function styleMarks(style: PageStyle, box: Box, dateLine: boolean): Mark[] {
   const marks: Mark[] = [];
   let top = box.y;

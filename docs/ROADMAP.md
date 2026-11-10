@@ -92,18 +92,18 @@ Ship four presets (Classic, Modern, Minimal, Ornamental) and let users tweak any
 ## Ideas backlog
 
 - ~~Image-folder interior for coloring books and planners~~ Done: the Interior tab (low-content builder, `src/core/lowcontent.ts`).
-- **Interior preflight:** check any interior PDF for trim size, bleed, margins and gutter, low-resolution images, unembedded fonts, blank-page runs, and that the page count matches the cover.
-- Preflight: check embedded fonts, the resolution of images placed inside a PDF, color mode and transparency (needs a deeper PDF parser).
+- ~~Interior preflight~~ Done: trim size, bleed, margins and gutter, image resolution, embedded fonts, blank-page runs, and the page count against the cover (`src/core/interiorPreflight.ts`).
+- Cover preflight: check embedded fonts, the resolution of images placed inside a PDF, color mode and transparency.
 - Mockup: open-book and hand-held poses, custom camera presets, batch export of every pose.
 - Batch templates for a series (same trim/paper, different page counts)
 - Printable PDF "ruler check" sheet
 - Localised UI (the folder already has KDP templates in eight languages)
-- Import page count from an uploaded PDF interior
+- ~~Import page count from an uploaded PDF interior~~ Done: interior preflight's "Set the book to … pages".
 
 ### Considered and set aside
 
 - A cover composer that assembles front/back/spine artwork into one file: designers already export a single cover from their design tool.
-- ISBN barcode generation: most authors use KDP's free ISBN.
+- ~~ISBN barcode generation~~ Built after all (Cover template tab), for authors with their own ISBN.
 - Royalty and print-cost calculator: KDP shows it at publish time.
-- Saved book profiles: not needed yet.
+- ~~Saved book profiles~~ Built as Book projects.
 - Embedding as a package or iframe: the core is UI-free, so other apps can lift the logic directly (see ARCHITECTURE.md).

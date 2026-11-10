@@ -1,4 +1,20 @@
-import { buildCoverScene, drawScene, formatSize, getPaper, runPreflight, type Check, type CoverLayout, type PreflightResult } from '../../core';
+import {
+  buildCoverScene,
+  drawScene,
+  formatSize,
+  getPaper,
+  getTrimSize,
+  pageLimits,
+  readInteriorPdf,
+  runInteriorPreflight,
+  runPreflight,
+  type Check,
+  type CoverLayout,
+  type InteriorFacts,
+  type InteriorResult,
+  type PreflightResult,
+} from '../../core';
+import { scanInterior } from '../interiorScan';
 import { loadArtwork, newCanvas, type Artwork } from '../artwork';
 import type { Ctx, Screen } from '../context';
 import { $, bindFileInput, esc, segment, times, toast } from '../dom';
@@ -19,7 +35,7 @@ const VERDICT = {
   fail: 'Needs fixing before you upload.',
 } as const;
 
-export function initPreflightScreen(ctx: Ctx): Screen {
+export function initPreflightScreen(ctx: Ctx & { setPages(n: number): void }): Screen {
   let art: Artwork | null = null;
   let overlay: Overlay = 'on';
   let loadError = '';
@@ -152,5 +168,126 @@ export function initPreflightScreen(ctx: Ctx): Screen {
     toast((await copyText(reportText(layout, last))) ? 'Report copied' : 'Could not copy to the clipboard');
   });
 
-  return { id: 'preflight', refresh, activate: () => art && refresh() };
+  // ---- interior mode ----------------------------------------------------------------------
+
+  let mode: 'cover' | 'interior' = 'cover';
+  let interior: { name: string; facts: InteriorFacts; result: InteriorResult } | null = null;
+  const ie = {
+    cover: $('pf-cover-mode'),
+    wrap: $('pf-interior-mode'),
+    expected: $('pfi-expected'),
+    book: $('pfi-book'),
+    drop: $('pfi-drop'),
+    file: $<HTMLInputElement>('pfi-file'),
+    progress: $('pfi-progress'),
+    result: $('pfi-result'),
+    verdict: $('pfi-verdict'),
+    checks: $('pfi-checks'),
+    notChecked: $('pfi-notchecked'),
+    usePages: $<HTMLButtonElement>('pfi-use-pages'),
+    copy: $<HTMLButtonElement>('pfi-copy'),
+    empty: $('pfi-empty'),
+  };
+  const INTERIOR_VERDICT = {
+    pass: 'Looks good. This interior matches the book you described.',
+    warn: 'Mostly fine, but check the warnings before you upload.',
+    fail: 'Needs fixing before you upload.',
+  } as const;
+
+  const modeSeg = segment<'cover' | 'interior'>(
+    $('pf-mode'),
+    [
+      { value: 'cover', label: 'Cover' },
+      { value: 'interior', label: 'Interior' },
+    ],
+    () => mode,
+    (v) => {
+      mode = v;
+      refreshAll();
+    },
+  );
+
+  /** The book on the left, as the interior check needs it. Works before a page count is entered. */
+  function interiorBook() {
+    const st = ctx.state;
+    const custom = st.trimId === 'custom' && st.binding === 'paperback';
+    const preset = custom ? undefined : getTrimSize(st.trimId, st.binding);
+    const w = preset ? preset.width : st.customWidth;
+    const h = preset ? preset.height : st.customHeight;
+    if (!(w > 0 && h > 0)) return null;
+    const lim = pageLimits(st.binding, preset, getPaper(st.paper));
+    return { trimWidth: w, trimHeight: h, binding: st.binding, limits: { min: lim.min, max: lim.max }, coverPages: st.pages };
+  }
+
+  bindFileInput(ie.file, ie.drop, async (file) => {
+    const book = interiorBook();
+    if (!book) return;
+    ie.drop.classList.add('busy');
+    ie.progress.hidden = false;
+    ie.progress.textContent = 'Reading the PDF…';
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const facts = await readInteriorPdf(bytes);
+      facts.pages = await scanInterior(bytes, facts.pages, (d, t) => (ie.progress.textContent = `Checking page ${d} of ${t}…`));
+      interior = { name: file.name, facts, result: runInteriorPreflight(book, facts) };
+    } catch (err) {
+      interior = null;
+      toast(err instanceof Error ? err.message : String(err));
+    } finally {
+      ie.drop.classList.remove('busy');
+      ie.progress.hidden = true;
+    }
+    refreshInterior();
+  });
+
+  function refreshInterior(): void {
+    const book = interiorBook();
+    ie.empty.hidden = !!book;
+    ie.drop.hidden = !book;
+    if (book) {
+      const L = ctx.state.binding === 'hardcover' ? 'Hardcover' : 'Paperback';
+      ie.expected.textContent = times(`${formatSize(book.trimWidth, book.trimHeight, 'in')} pages`);
+      ie.book.textContent = times(`${L} · or ${formatSize(book.trimWidth + 0.125, book.trimHeight + 0.25, 'in')} with bleed · ${book.limits.min} to ${book.limits.max ?? '–'} pages`);
+    }
+    ie.result.hidden = !interior;
+    if (!interior) return;
+    if (book) interior.result = runInteriorPreflight(book, interior.facts); // the book on the left may have changed
+    const r = interior.result;
+    ie.verdict.className = `verdict ${r.verdict}`;
+    ie.verdict.textContent = `${interior.name}: ${INTERIOR_VERDICT[r.verdict]}`;
+    ie.checks.innerHTML = r.checks
+      .map(
+        (c) =>
+          `<li class="check-row ${c.status}"><span class="ck" role="img" aria-label="${ICON[c.status].label}">${ICON[c.status].glyph}</span><div><strong>${esc(c.title)}</strong><span>${esc(times(c.detail))}</span></div></li>`,
+      )
+      .join('');
+    ie.notChecked.innerHTML = r.notChecked.map((n) => `<li>${esc(n)}</li>`).join('');
+    const mismatch = ctx.state.pages !== r.pageCount;
+    ie.usePages.hidden = !mismatch;
+    ie.usePages.textContent = `Set the book to ${r.pageCount} pages`;
+  }
+
+  ie.usePages.addEventListener('click', () => {
+    if (!interior) return;
+    ctx.setPages(interior.result.pageCount);
+    toast(`Book set to ${interior.result.pageCount} pages. The cover template now uses this page count.`);
+  });
+  ie.copy.addEventListener('click', async () => {
+    if (!interior) return;
+    const r = interior.result;
+    const lines = ['KDP INTERIOR PREFLIGHT REPORT', `File: ${interior.name}`, '', `Result: ${INTERIOR_VERDICT[r.verdict]}`, ''];
+    for (const c of r.checks) lines.push(`[${ICON[c.status].label.toUpperCase()}] ${c.title}: ${c.detail}`);
+    lines.push('', 'Not checked:', ...r.notChecked.map((n) => `  - ${n}`));
+    toast((await copyText(lines.join('\n') + '\n')) ? 'Report copied' : 'Could not copy to the clipboard');
+  });
+
+  function refreshAll(): void {
+    modeSeg.sync();
+    ie.cover.hidden = mode !== 'cover';
+    ie.wrap.hidden = mode !== 'interior';
+    if (mode === 'cover') refresh();
+    else refreshInterior();
+  }
+
+  return { id: 'preflight', refresh: refreshAll, activate: () => (mode === 'interior' || art) && refreshAll() };
 }

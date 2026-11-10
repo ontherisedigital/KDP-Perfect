@@ -12,3 +12,6 @@ export * from './render';
 export * from './lowcontent';
 export * from './design';
 export * from './puzzles';
+export * from './interiorPreflight';
+export * from './barcode';
+export * from './project';

@@ -19,11 +19,11 @@ export interface Artwork {
 
 export const MAX_UPLOAD_BYTES = 700 * 1024 * 1024;
 
-type PdfJs = typeof import('pdfjs-dist');
+export type PdfJs = typeof import('pdfjs-dist');
 let pdfjsPromise: Promise<PdfJs> | undefined;
 
 /** pdf.js is large, so it is only fetched when a PDF is first opened. */
-function getPdfjs(): Promise<PdfJs> {
+export function getPdfjs(): Promise<PdfJs> {
   pdfjsPromise ??= (async () => {
     const pdfjs = await import('pdfjs-dist');
     const worker = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
@@ -54,7 +54,7 @@ async function renderPdfFirstPage(bytes: Uint8Array, maxSide: number): Promise<H
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvas, viewport }).promise;
+    await page.render({ canvas, viewport, intent: 'print' }).promise; // no animation-frame wait (stalls in a hidden window)
     return canvas;
   } finally {
     await task.destroy();

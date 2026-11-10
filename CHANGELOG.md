@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- **Interior preflight** (Preflight → Interior): page size and bleed, mixed page sizes, page count against KDP's limits and the cover, margins and gutter on every page, blank-page runs, embedded fonts, and the real resolution of placed images. One click sets the book's page count from the PDF.
+- **ISBN barcode** generator on the Cover template tab: EAN-13 from an ISBN-10 or ISBN-13, optional price add-on, 80-100% sizes, PDF / PNG / SVG.
+- **Book projects**: save, open, rename, delete and start new books; export and import project files with their Page designer images.
+
+### Fixed
+- Page numbers on journal pages sat in the bottom margin, which KDP rejects; they now sit inside the margins and the lines stop above them.
+- PDF previews no longer stall while the app window is hidden or minimised.
+
+### Changed
+- The Kindle eBook cover template goes back to a white page; the print cover template keeps the blue page.
+
 ## [0.8.0] - 2026-11-10
 
 ### Changed

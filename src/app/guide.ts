@@ -71,11 +71,34 @@ const TOPICS: Topic[] = [
       interior gains or loses pages, make a new template.</p>`,
   },
   {
+    id: 'projects',
+    title: 'Book projects',
+    html: `
+      <p>Working on more than one book? The <b>Projects</b> button at the top saves everything for a book in one go:
+      the details in Your book, every tab's settings, the Page designer pages and the puzzles. Its name shows on the
+      button.</p>
+      <ul>
+        <li><b>Save this book…</b> names and saves the book you are working on. After that, <b>Save changes</b> keeps it
+        up to date; it lights up when something has changed.</li>
+        <li><b>Open</b> switches to another book. You are asked first if the current one has unsaved changes.</li>
+        <li><b>New book</b> starts from scratch.</li>
+        <li><b>Export</b> saves a project file, with its Page designer images, for a backup or another computer.
+        <b>Open a project file…</b> brings it back.</li>
+      </ul>
+      <p class="guide-small">Projects are kept on this computer. Uploaded covers, cover art and coloring pages are not
+      stored in a project; add them again when you need them.</p>`,
+  },
+  {
     id: 'cover',
     title: 'Cover template',
     html: `
       <p>The card at the top shows the size to make your cover: in your unit, in the other two units, and in pixels at
       the DPI you choose. <b>Copy size</b> puts it on the clipboard.</p>
+      <h4>ISBN barcode</h4>
+      <p>Using your own ISBN? At the bottom of this tab, type it in (ISBN-10 or ISBN-13; hyphens are fine) and,
+      if you like, a price add-on: a US price such as <b>14.99</b>, or <b>90000</b> for no price. Download the
+      barcode as PDF, PNG (300 DPI) or SVG and place it inside the dashed barcode area on the back cover. 85% is the
+      usual size for books. If you use a free KDP ISBN, or leave the area empty, KDP prints the barcode for you.</p>
       <h4>Downloading</h4>
       <table class="guide-table"><thead><tr><th>Version</th><th>File types</th><th>Use it to</th></tr></thead><tbody>
         <tr><td><b>Template</b></td><td>PNG, JPG, PDF</td><td>See every zone labelled; use it as the bottom layer of your design.</td></tr>
@@ -305,6 +328,8 @@ const TOPICS: Topic[] = [
     id: 'preflight',
     title: 'Preflight',
     html: `
+      <p>Preflight checks a finished file before you upload it. Pick <b>Cover</b> or <b>Interior</b> at the top.</p>
+      <h4>Checking a cover</h4>
       <ol>
         <li>Fill in <b>Your book</b> to match the book you are about to upload.</li>
         <li>Choose your finished cover, or drop it on the box: PDF, PNG or JPG.</li>
@@ -321,7 +346,27 @@ const TOPICS: Topic[] = [
         <li>Look at the preview: your artwork with the guides on top. Switch the guides off to see it clean.</li>
       </ol>
       <p class="guide-small">Preflight cannot check embedded fonts, colour mode, transparency, the resolution of images
-      inside a PDF, or whether text sits in the safe area. They are listed under <b>What this doesn't check</b>.</p>`,
+      inside a PDF, or whether text sits in the safe area. They are listed under <b>What this doesn't check</b>.</p>
+      <h4>Checking an interior</h4>
+      <ol>
+        <li>Set the <b>binding, trim size and paper</b> in Your book. The page count can be blank.</li>
+        <li>Switch to <b>Interior</b> and choose your interior PDF. Every page is checked (up to 300); a long book takes
+        a few seconds.</li>
+        <li>The checklist covers:
+          <ul>
+            <li><b>Page size and bleed</b>: pages must be the trim size (no bleed) or 0.125" wider and 0.25" taller
+            (bleed). Preflight tells you which one to choose when you upload.</li>
+            <li><b>Page count</b>: within KDP's minimum and maximum, and whether it matches your cover's spine. If it
+            doesn't, <b>Set the book to … pages</b> updates the cover template.</li>
+            <li><b>Margins</b>: anything printed too close to the edge or the spine, with the page numbers. The gutter
+            (spine side) gets wider as the page count grows. With bleed, art may run off the edge, but text should not
+            sit in the margins.</li>
+            <li><b>Fonts</b>: every font must be embedded.</li>
+            <li><b>Image resolution</b>: the real printed resolution of each image. KDP asks for 300 DPI.</li>
+          </ul>
+        </li>
+      </ol>
+      <p class="guide-small">Interiors made on the Interior tab already follow these rules, page numbers included.</p>`,
   },
   {
     id: 'mockup',

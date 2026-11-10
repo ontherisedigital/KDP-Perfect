@@ -16,8 +16,10 @@
 | --- | --- |
 | **Cover template** | The exact canvas size (in, cm, mm, px) and a marked-up template for a **paperback** or **hardcover** (case laminate): bleed or wrap, trim lines, hinge, safe areas, spine text zone and barcode box. Download as PNG, JPG or PDF at actual size, plus a transparent guides overlay. |
 | **Kindle eBook** | The 1600 × 2560 px front-cover template (or any custom size) with KDP's rules: ratio, limits, border, what to leave out. |
-| **Preflight** | Drop in your finished cover (PDF, PNG or JPG). It checks the page size and shape against your book, flags low resolution, and explains mismatches ("the width suggests a 240-page spine"). Your artwork is shown with the guides on top. |
-| **3D mockup** | A real 3D book with your cover on it: eight poses (standing, front-on, floating, pair, stack, lying flat, back, spine), matte or glossy, soft shadows, transparent or coloured backgrounds, and **1:1 / 4:5 / 2:3 / 3:2 / 16:9** output. Works for paperbacks and hardcovers, including square trims. |
+| **Preflight** | **Cover:** drop in your finished cover (PDF, PNG or JPG). It checks the page size and shape against your book, flags low resolution, and explains mismatches ("the width suggests a 240-page spine"). Your artwork is shown with the guides on top. **Interior:** checks an interior PDF's page size and bleed, page count (and that it matches the cover), margins and gutter on every page, embedded fonts and the real resolution of placed images. |
+| **ISBN barcode** | An EAN-13 ISBN barcode with an optional price add-on, as PDF, PNG or SVG, sized for KDP's barcode area. |
+| **Book projects** | Save, open, rename and back up whole books: every tab's settings, the Page designer pages and the puzzles. |
+| **3D mockup** | A real 3D book with your cover on it: eight poses (standing, front-on, floating, pair, stack, lying flat, back, spine), matte or glossy, soft shadows, transparent or coloured backgrounds, and **1:1 / 4:5 / 3:4 / 2:3 / 9:16 / 3:2 / 16:9** output, on colour or photo backgrounds (wood, linen, curtain, shelf). Works for paperbacks and hardcovers, including square trims. |
 
 Also: all KDP paperback trim sizes plus custom sizes, the five paperback papers (including groundwood and standard color), hardcover sizes, right-to-left books, page-count limits, and a "guide positions" table for placing rulers by number. Everything runs on your computer; nothing is uploaded.
 
@@ -106,7 +108,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit together
 
 ## Roadmap
 
-New: the **Interior** tab builds print-ready low-content interiors (coloring and activity books from your images; journals, notebooks and planners from generated pages) and assembles a full-wrap cover from your front and back art. Next up: an interior preflight for PDFs made elsewhere. Details in [docs/ROADMAP.md](docs/ROADMAP.md).
+New: the **Interior** tab builds print-ready low-content interiors (coloring and activity books from your images; journals, notebooks and planners from generated pages) and assembles a full-wrap cover from your front and back art. Details in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Contributing
 

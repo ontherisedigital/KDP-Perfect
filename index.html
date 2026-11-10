@@ -27,6 +27,10 @@
         <button type="button" class="tab" data-tab="preflight">Preflight</button>
         <button type="button" class="tab" data-tab="mockup">3D mockup</button>
       </nav>
+      <button type="button" class="btn small projects-btn" id="projects-btn" title="Save, open and back up your books">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h6l2 2h8a1 1 0 0 1 1 1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1Z"/></svg>
+        <span id="projects-name">Projects</span>
+      </button>
       <button type="button" class="btn small guide-btn" data-guide="start" title="How everything works (F1)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 16.2a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Zm1.4-5.1c-.5.3-.6.5-.6 1v.4h-2.1v-.6c0-1.2.5-1.8 1.4-2.4.7-.5 1.1-.8 1.1-1.5 0-.7-.6-1.2-1.4-1.2-.9 0-1.5.5-1.6 1.4H8.1C8.2 8 9.8 6.6 12 6.6c2.1 0 3.6 1.2 3.6 3 0 1.3-.7 2-2.2 3.5Z"/></svg>
         <span>User Guide</span>
@@ -183,6 +187,32 @@
               <div class="table-wrap"><table id="guides-h"><thead><tr><th scope="col">From top</th><th scope="col">Marks</th></tr></thead><tbody></tbody></table></div>
             </div>
           </details>
+
+          <div class="card barcode-card" id="bc-card">
+            <h2>ISBN barcode</h2>
+            <p class="hint">If you use your own ISBN, KDP can print the barcode for you, or you can place your own in the barcode area. Leave KDP's box empty if you want KDP to add it.</p>
+            <div class="row3">
+              <div class="field tight">
+                <label for="bc-isbn">ISBN</label>
+                <input id="bc-isbn" type="text" inputmode="numeric" autocomplete="off" placeholder="978-1-234567-89-7" />
+              </div>
+              <div class="field tight">
+                <label for="bc-price">Price add-on (optional)</label>
+                <input id="bc-price" type="text" autocomplete="off" placeholder="14.99 or 90000" />
+              </div>
+              <div class="field tight">
+                <label for="bc-scale">Size</label>
+                <select id="bc-scale"><option value="0.8">80%</option><option value="0.85" selected>85% (usual for books)</option><option value="0.92">92%</option><option value="1">100%</option></select>
+              </div>
+            </div>
+            <p class="hint" id="bc-msg"></p>
+            <div class="barcode-preview" id="bc-preview" hidden></div>
+            <div class="btn-row wide">
+              <button type="button" class="btn primary" data-bc="pdf" disabled>Download PDF</button>
+              <button type="button" class="btn" data-bc="png" disabled>PNG (300 DPI)</button>
+              <button type="button" class="btn" data-bc="svg" disabled>SVG</button>
+            </div>
+          </div>
         </section>
 
         <!-- ---------- Kindle eBook ---------- -->
@@ -231,6 +261,8 @@
         <!-- ---------- Preflight ---------- -->
         <section class="panel glass results" data-screen="preflight" aria-labelledby="h-preflight" hidden>
           <h1 id="h-preflight" class="visually-hidden">Preflight check</h1>
+          <div class="seg full pf-mode" role="group" aria-label="What to check" id="pf-mode"></div>
+          <div id="pf-cover-mode">
           <div class="canvas-card">
             <div class="eyebrow">Checking against</div>
             <div class="canvas-primary" id="pf-expected">&ndash;</div>
@@ -265,6 +297,35 @@
             </figure>
           </div>
           <div class="empty" id="pf-empty">Enter your book details on the left, then choose your cover file.</div>
+          </div>
+
+          <div id="pf-interior-mode" hidden>
+            <div class="canvas-card">
+              <div class="eyebrow">Checking against</div>
+              <div class="canvas-primary" id="pfi-expected">&ndash;</div>
+              <div class="canvas-alt" id="pfi-book"></div>
+            </div>
+            <label class="drop" id="pfi-drop" for="pfi-file">
+              <input id="pfi-file" type="file" accept="application/pdf,.pdf" />
+              <strong>Choose your interior PDF</strong>
+              <span>or drop it here</span>
+            </label>
+            <p class="hint">Checks the page size, bleed, page count, margins, fonts and image resolution. Your file never leaves your computer.</p>
+            <p class="hint" id="pfi-progress" hidden></p>
+            <div id="pfi-result" hidden>
+              <div class="verdict" id="pfi-verdict"></div>
+              <ul class="checks" id="pfi-checks"></ul>
+              <details class="steps">
+                <summary>What this doesn't check</summary>
+                <ul id="pfi-notchecked"></ul>
+              </details>
+              <div class="btn-row wide">
+                <button type="button" class="btn primary" id="pfi-use-pages" hidden></button>
+                <button type="button" class="btn subtle" id="pfi-copy">Copy report</button>
+              </div>
+            </div>
+            <div class="empty" id="pfi-empty" hidden>Choose a trim size on the left first.</div>
+          </div>
         </section>
 
         <!-- ---------- Low-content interior ---------- -->
