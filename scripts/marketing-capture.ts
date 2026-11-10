@@ -529,7 +529,7 @@ async function featureShots(): Promise<void> {
   await shot('13b-interior-preflight-problems');
 
   await tab('cover');
-  await js(`(() => { const i = document.getElementById('bc-isbn'); i.value = '978-1-7363401-2-6'; i.dispatchEvent(new Event('input')); const p = document.getElementById('bc-price'); p.value = '14.99'; p.dispatchEvent(new Event('input')); })()`);
+  await js(`(() => { const i = document.getElementById('bc-isbn'); i.value = '978-1-7363401-2-7'; i.dispatchEvent(new Event('input')); const p = document.getElementById('bc-price'); p.value = '14.99'; p.dispatchEvent(new Event('input')); })()`);
   await sleep(500);
   await scrollTo('#bc-card', -90);
   await shot('14-isbn-barcode');
@@ -587,7 +587,7 @@ async function featureVideos(): Promise<void> {
     await click('[data-tab="cover"]');
     await sleep(1400);
     await scrollTo('#bc-card', -90, 1000);
-    await typeInto('#bc-isbn', '978-1-7363401-2-6');
+    await typeInto('#bc-isbn', '978-1-7363401-2-7');
     await sleep(500);
     await typeInto('#bc-price', '14.99');
     await sleep(1600);
