@@ -8,13 +8,13 @@
  * (MP4 + GIF). The artwork is generated procedurally and is entirely fictional. Output goes to marketing/ (git-ignored).
  */
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PDFDocument } from 'pdf-lib';
-import { computeCoverLayout, type CoverInput, type CoverLayout } from '../src/core';
+import { buildInteriorPdf, computeCoverLayout, planInterior, type CoverInput, type CoverLayout } from '../src/core';
 
 const require = createRequire(import.meta.url);
 const electronPath: string = require('electron');
@@ -344,8 +344,11 @@ async function viewport(width: number, height: number, scale: number): Promise<v
   await sleep(500);
 }
 
-async function theme(mode: 'light' | 'dark'): Promise<void> {
-  await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: mode }] });
+/** Screenshots and videos are captured once per theme, so the light and dark sets match. */
+let MODE: 'light' | 'dark' = 'light';
+
+async function theme(_requested?: 'light' | 'dark'): Promise<void> {
+  await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: MODE }] });
   await sleep(300);
 }
 
@@ -380,13 +383,14 @@ async function shot(name: string, clip?: string): Promise<void> {
     params = { ...params, captureBeyondViewport: true, clip: { x: r.x, y: r.y + (await js<number>('window.scrollY')), width: r.w, height: r.h, scale: 1 } };
   }
   const { data } = await cdp.send<{ data: string }>('Page.captureScreenshot', params);
-  writeFileSync(join(DIRS.shots, `${name}.png`), Buffer.from(data, 'base64'));
+  writeFileSync(join(DIRS.shots, `${name}-${MODE}.png`), Buffer.from(data, 'base64'));
   await js(`(() => { const c = document.getElementById('__cur'); if (c) c.style.visibility = 'visible'; })()`);
   log('screenshot', name);
 }
 
 /** Record the page while `fn` runs, then encode MP4 + GIF. */
-async function record(name: string, fn: () => Promise<void>): Promise<void> {
+async function record(base: string, fn: () => Promise<void>): Promise<void> {
+  const name = `${base}-${MODE}`;
   const tmp = mkdtempSync(join(tmpdir(), `kdp-rec-${name}-`));
   const frames: { file: string; t: number }[] = [];
   let n = 0;
@@ -481,14 +485,124 @@ async function screenshots(): Promise<void> {
   await sleep(2500);
   await shot('06-3d-mockup-square');
   await shot('06b-mockup-stage', '#mock-stage');
+}
 
-  // 7: dark mode
-  await theme('dark');
-  await shot('07-3d-mockup-dark');
+/** A clean 6 x 9 journal interior and a wrongly sized one, for the interior preflight. */
+async function interiorPdfs(): Promise<{ good: Uint8Array; wrong: Uint8Array }> {
+  const fonts = { display: readFileSync(join(ROOT, 'src/app/fonts/fredoka-latin.woff2')), body: readFileSync(join(ROOT, 'src/app/fonts/dosis-latin.woff2')) };
+  const make = (w: number, h: number, count: number) => {
+    const plan = planInterior({
+      trimWidth: w,
+      trimHeight: h,
+      bleed: false,
+      sided: 'double',
+      front: { title: 'Morning Pages', subtitle: 'A guided journal', author: 'June Hart', belongsTo: true, copyright: 'Copyright 2026 June Hart. All rights reserved.' },
+      content: { kind: 'journal', style: 'lined-wide', count, dateLine: true },
+      pageNumbers: true,
+      limits: { min: 24, max: 828 },
+    });
+    return buildInteriorPdf(plan, [], fonts);
+  };
+  return { good: await make(6, 9, 196), wrong: await make(8.5, 11, 120) };
+}
+
+/** Interior preflight, ISBN barcode, book projects and photo mockup backgrounds. */
+async function featureShots(): Promise<void> {
+  await viewport(1440, 1000, 2);
+  await theme();
+  const pdfs = await interiorPdfs();
+
+  await resetApp();
+  await setBook({ trim: '6x9', pages: 200 });
+  await tab('preflight');
+  await js(`document.querySelector('#pf-mode [data-v="interior"]').click()`);
+  await upload('pfi-file', 'morning-pages-interior.pdf', 'application/pdf', pdfs.good);
+  await waitFor(`!document.getElementById('pfi-result').hidden`, 60000);
+  await sleep(800);
+  await scrollTo('#pfi-verdict', -90);
+  await shot('13-interior-preflight-pass');
+  await scrollTo('#pfi-drop', -120);
+  await upload('pfi-file', 'morning-pages-letter-size.pdf', 'application/pdf', pdfs.wrong);
+  await waitFor(`document.getElementById('pfi-verdict').textContent.includes('letter-size')`, 60000);
+  await sleep(800);
+  await scrollTo('#pfi-verdict', -90);
+  await shot('13b-interior-preflight-problems');
+
   await tab('cover');
+  await js(`(() => { const i = document.getElementById('bc-isbn'); i.value = '978-1-7363401-2-6'; i.dispatchEvent(new Event('input')); const p = document.getElementById('bc-price'); p.value = '14.99'; p.dispatchEvent(new Event('input')); })()`);
   await sleep(500);
-  await shot('08-cover-template-dark');
-  await theme('light');
+  await scrollTo('#bc-card', -90);
+  await shot('14-isbn-barcode');
+  await shot('14b-isbn-barcode-card', '#bc-card');
+
+  // Projects: a few saved books.
+  await js(`(() => {
+    const now = Date.now();
+    const snap = { state: JSON.parse(localStorage.getItem('selfpublisher-studio.v2') || 'null'), design: null, puzzles: null };
+    const list = ['Morning Pages', 'Wild Garden Coloring Book', 'Ocean Puzzles for Kids', 'The Last Lantern'].map((name, i) => ({ id: 'p' + i, name, savedAt: new Date(now - i * 86400000 * 2.5).toISOString(), ...snap }));
+    localStorage.setItem('selfpublisher-studio.projects.v1', JSON.stringify(list));
+    localStorage.setItem('selfpublisher-studio.project.current', 'p0');
+  })()`);
+  await cdp.send('Page.reload', { ignoreCache: true });
+  await sleep(1200);
+  await js(CURSOR_JS);
+  await js(`document.getElementById('projects-btn').click()`);
+  await sleep(600);
+  await shot('15-book-projects');
+  await js(`document.querySelector('dialog.projects').close()`);
+
+  // Photo backgrounds on the 3D mockup.
+  await resetApp();
+  await setBook({ trim: '8.5x8.5', pages: 110 });
+  await tab('mockup');
+  await upload('mock-file', 'wild-garden-cover.png', 'image/png', art.b);
+  await sleep(2500);
+  await js(`document.querySelector('#mock-bg [data-v="wood-light"]').click()`);
+  await sleep(1500);
+  await shot('16-mockup-photo-background');
+  await js(`document.querySelector('#mock-aspect [data-v="9:16"]').click(); document.querySelector('#mock-bg [data-v="linen"]').click()`);
+  await sleep(1500);
+  await shot('16b-mockup-photo-story', '#mock-stage');
+}
+
+async function featureVideos(): Promise<void> {
+  await viewport(1440, 900, 1);
+  await theme();
+  const pdfs = await interiorPdfs();
+  await resetApp();
+  await setBook({ trim: '6x9', pages: 200 });
+  await tab('preflight');
+  await record('selfpublisher-studio-interior-preflight-barcode-projects', async () => {
+    await sleep(1000);
+    await click('#pf-mode [data-v="interior"]');
+    await sleep(800);
+    await pretendClick('#pfi-drop');
+    await upload('pfi-file', 'morning-pages-interior.pdf', 'application/pdf', pdfs.good);
+    await waitFor(`!document.getElementById('pfi-result').hidden`, 60000);
+    await sleep(800);
+    await scrollTo('#pfi-verdict', -90, 900);
+    await sleep(2200);
+    await click('#pfi-use-pages');
+    await sleep(1800);
+    await click('[data-tab="cover"]');
+    await sleep(1400);
+    await scrollTo('#bc-card', -90, 1000);
+    await typeInto('#bc-isbn', '978-1-7363401-2-6');
+    await sleep(500);
+    await typeInto('#bc-price', '14.99');
+    await sleep(1600);
+    await setSelect('#bc-scale', '1');
+    await sleep(1200);
+    await click('#projects-btn');
+    await sleep(900);
+    await click('[data-act="save-as"]');
+    await sleep(500);
+    await js(`document.getElementById('projects-name-input').value = ''`);
+    await typeInto('#projects-name-input', 'Morning Pages');
+    await sleep(400);
+    await click('#projects-name-form [type="submit"]');
+    await sleep(2200);
+  });
 }
 
 /** The low-content tools: Interior, Page designer, Puzzles and the User Guide. */
@@ -636,6 +750,11 @@ async function mockups(): Promise<void> {
   await make('mockup-09-standing-transparent', { pose: 'hero', bg: 'clear', format: 'png' });
   await make('mockup-10-standing-4x5', { pose: 'hero', aspect: '4:5', bg: 'warm', format: 'png' });
   await make('mockup-11-floating-wide-night', { pose: 'floating', aspect: '16:9', bg: 'night', finish: 'glossy' });
+  await make('mockup-14-standing-light-wood-square', { pose: 'hero', aspect: '1:1', bg: 'wood-light', finish: 'matte' });
+  await make('mockup-15-flat-linen-4x5', { pose: 'flat', aspect: '4:5', bg: 'linen' });
+  await make('mockup-16-pair-dark-wood-wide', { pose: 'pair', aspect: '16:9', bg: 'wood-dark' });
+  await make('mockup-17-front-shelf-story', { pose: 'front', aspect: '9:16', bg: 'shelf' });
+  await make('mockup-18-floating-curtain-3x4', { pose: 'floating', aspect: '3:4', bg: 'curtain', finish: 'glossy' });
 
   // Hardcover novel
   await resetApp();
@@ -746,8 +865,14 @@ async function videos(): Promise<void> {
     await sleep(1300);
     await click('#binding-toggle [data-v="paperback"]');
     await sleep(900);
+    await click('[data-tab="interior"]');
+    await sleep(1600);
+    await click('[data-tab="designer"]');
+    await sleep(1600);
+    await click('[data-tab="puzzles"]');
+    await sleep(1400);
     await click('[data-tab="ebook"]');
-    await sleep(1800);
+    await sleep(1400);
     await click('[data-tab="preflight"]');
     await sleep(900);
     await upload('pf-file', 'cover.pdf', 'application/pdf', await artToPdf(art.a, 12.7004, 9.25));
@@ -789,11 +914,18 @@ async function main(): Promise<void> {
       c: await makeArt(computeCoverLayout(BOOK_C), 'woodland', 11),
     };
 
-    if (want('screenshots')) await screenshots();
-    if (want('screenshots') || want('tools')) await newToolShots();
+    for (const m of ['light', 'dark'] as const) {
+      MODE = m;
+      log(`=== ${m} mode`);
+      if (want('screenshots')) await screenshots();
+      if (want('screenshots') || want('tools')) await newToolShots();
+      if (want('screenshots') || want('features')) await featureShots();
+      if (want('videos')) await videos();
+      if (want('videos') || want('tools')) await newToolVideos();
+      if (want('videos') || want('features')) await featureVideos();
+    }
+    MODE = 'light';
     if (want('mockups')) await mockups();
-    if (want('videos')) await videos();
-    if (want('videos') || want('tools')) await newToolVideos();
 
     // The app's own template exports are marketing material too; mockup exports were already renamed into Mockups/.
     for (const f of readdirSync(DL)) {
